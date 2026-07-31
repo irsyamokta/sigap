@@ -16,11 +16,8 @@ export default defineConfig(({ mode }) => {
       }),
       react(),
     ],
-    // Hanya inject VITE_* variables ke client bundle.
-    // GEMINI_API_KEY dibaca server-side dari process.env saat runtime,
-    // jangan di-embed di sini agar tidak bocor ke client.
     define: {
-      "import.meta.env.MODE": JSON.stringify(mode),
+      "process.env.GEMINI_API_KEY": JSON.stringify(env.GEMINI_API_KEY),
     },
     resolve: {
       alias: { "@": `${process.cwd()}/src` },

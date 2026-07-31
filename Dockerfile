@@ -17,6 +17,10 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
+# Embed API key ke dalam bundle saat build
+ARG GEMINI_API_KEY
+ENV GEMINI_API_KEY=$GEMINI_API_KEY
+
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
 RUN npm run build
@@ -32,7 +36,6 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
 
-# Copy build output dan node_modules dari builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json

@@ -51,6 +51,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+          build-args: |
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 
       - name: Deploy on VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
