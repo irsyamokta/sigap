@@ -1,0 +1,22 @@
+services:
+  app:
+    image: ghcr.io/irsyamokta/sigap:latest
+    build:
+      context: .
+      args:
+        - GEMINI_API_KEY=${GEMINI_API_KEY}
+    container_name: sigap
+    restart: unless-stopped
+    ports:
+      - "3006:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    networks:
+      - odoonet
+
+networks:
+  odoonet:
+    external: true
