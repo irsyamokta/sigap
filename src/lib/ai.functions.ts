@@ -8,7 +8,7 @@ const SummaryInput = z.object({
 });
 
 export const generateSummary = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => SummaryInput.parse(input))
+  .validator((input: unknown) => SummaryInput.parse(input))
   .handler(async ({ data }) => {
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new Error("Missing GEMINI_API_KEY");
