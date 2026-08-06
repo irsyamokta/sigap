@@ -45,9 +45,9 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Dashboard rumah sakit: ringkasan data pasien, tren perawatan, penyakit terbanyak, dan kecukupan tenaga kesehatan per puskesmas.",
+          "Dashboard Sigap: ringkasan data pasien, tren perawatan, penyakit terbanyak, dan kecukupan tenaga kesehatan per puskesmas.",
       },
-      { property: "og:title", content: "Dashboard Rumah Sakit" },
+      { property: "og:title", content: "Dashboard Sigap" },
       {
         property: "og:description",
         content: "Ringkasan data pasien, tren perawatan, dan kecukupan tenaga kesehatan per puskesmas.",
@@ -114,6 +114,7 @@ function Dashboard() {
         {/* Ringkasan AI */}
         <Section title="Ringkasan AI">
           <AiSummary
+            key={puskesmas}
             puskesmasNama={d.nama}
             periodeLabel={periodeLabel}
             onGenerate={handleGenerateSummary}
