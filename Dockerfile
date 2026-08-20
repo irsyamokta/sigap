@@ -12,18 +12,8 @@ RUN apt-get update && apt-get install -y \
 
 COPY package.json ./
 
-# Copy prisma schema BEFORE npm install so @prisma/client postinstall hook
-# can find schema.prisma and auto-generate the client during npm install
-COPY prisma ./prisma
-
-# Dummy DATABASE_URL for Prisma generate (does not connect to real DB)
-ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/db_sigap"
-
 # package-lock.json dikecualikan via .dockerignore karena berisi binary path Windows.
 RUN npm install --legacy-peer-deps
-
-# Explicit generate as a reliable fallback in case postinstall hook was skipped
-RUN npx prisma generate
 
 COPY . .
 
