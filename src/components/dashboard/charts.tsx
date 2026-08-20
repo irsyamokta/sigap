@@ -199,3 +199,88 @@ export function VektorPenyakitChart({ data }: { data: { nama: string; kasus: num
     </ResponsiveContainer>
   );
 }
+
+// Single puskesmas daily visit chart
+export function KunjunganHarianChart({
+  data,
+}: {
+  data: Record<string, string | number>[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={240}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+        <defs>
+          <linearGradient id="gradKunjungan" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="4 4" stroke="var(--color-border)" vertical={false} />
+        <XAxis dataKey="label" {...axisProps} interval="preserveStartEnd" />
+        <YAxis {...axisProps} />
+        <Tooltip {...tooltipStyle} />
+        <Area
+          type="monotone"
+          dataKey="total"
+          name="Kunjungan"
+          stroke="var(--color-primary)"
+          strokeWidth={2}
+          fill="url(#gradKunjungan)"
+          dot={false}
+          activeDot={{ r: 4, fill: "var(--color-primary)" }}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// Multi-line chart for Dinkes view — one line per puskesmas
+const PUSKESMAS_COLORS: Record<string, string> = {
+  purwokerto_barat: "var(--color-primary)",
+  patikraja:        "var(--color-chart-2)",
+  sokaraja_1:       "var(--color-chart-3)",
+  kembaran_1:       "var(--color-chart-4)",
+};
+const PUSKESMAS_LABELS: Record<string, string> = {
+  purwokerto_barat: "Purwokerto Barat",
+  patikraja:        "Patikraja",
+  sokaraja_1:       "Sokaraja 1",
+  kembaran_1:       "Kembaran 1",
+};
+
+export function KunjunganMultiLineChart({
+  data,
+}: {
+  data: Record<string, string | number>[];
+}) {
+  const puskesmasKeys = Object.keys(PUSKESMAS_COLORS);
+
+  return (
+    <ResponsiveContainer width="100%" height={260}>
+      <LineChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="4 4" stroke="var(--color-border)" vertical={false} />
+        <XAxis dataKey="label" {...axisProps} interval="preserveStartEnd" />
+        <YAxis {...axisProps} />
+        <Tooltip
+          {...tooltipStyle}
+          formatter={(value: number, name: string) => [
+            value,
+            PUSKESMAS_LABELS[name] ?? name,
+          ]}
+        />
+        {puskesmasKeys.map((pid) => (
+          <Line
+            key={pid}
+            type="monotone"
+            dataKey={pid}
+            name={pid}
+            stroke={PUSKESMAS_COLORS[pid]}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
+        ))}
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}

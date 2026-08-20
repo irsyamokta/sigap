@@ -1,3 +1,5 @@
+import error500Svg from "../assets/500.svg";
+
 export function renderErrorPage(): string {
   return `<!doctype html>
 <html lang="id">
@@ -64,7 +66,7 @@ export function renderErrorPage(): string {
     </style>
   </head>
   <body>
-    <img src="/src/assets/500.svg" alt="Ilustrasi error server" class="illustration" />
+    <img src="${error500Svg}" alt="Ilustrasi error server" class="illustration" />
     <h1>Terjadi kesalahan pada server</h1>
     <p>Maaf, ada sesuatu yang tidak berjalan dengan baik di sisi kami. Silakan coba lagi atau kembali ke halaman utama.</p>
     <div class="actions">

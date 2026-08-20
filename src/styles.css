@@ -64,44 +64,59 @@
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.97 0.002 240);
-  --foreground: oklch(0.28 0.05 245);
+  --background: oklch(0.97 0.003 200);
+  --foreground: oklch(0.25 0.05 210);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.28 0.05 245);
+  --card-foreground: oklch(0.25 0.05 210);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.28 0.05 245);
-  --primary: oklch(0.72 0.12 232);
-  --primary-foreground: oklch(0.99 0.005 230);
-  --primary-glow: oklch(0.62 0.15 250);
-  --secondary: oklch(0.95 0.025 230);
-  --secondary-foreground: oklch(0.35 0.06 240);
-  --muted: oklch(0.94 0.018 230);
-  --muted-foreground: oklch(0.55 0.035 240);
-  --accent: oklch(0.93 0.04 228);
-  --accent-foreground: oklch(0.32 0.06 240);
+  --popover-foreground: oklch(0.25 0.05 210);
+  --primary: oklch(0.65 0.17 210);
+  --primary-foreground: oklch(0.99 0.005 200);
+  --primary-glow: oklch(0.55 0.18 215);
+  --secondary: oklch(0.94 0.03 205);
+  --secondary-foreground: oklch(0.32 0.06 210);
+  --muted: oklch(0.93 0.02 205);
+  --muted-foreground: oklch(0.54 0.04 210);
+  --accent: oklch(0.91 0.05 205);
+  --accent-foreground: oklch(0.28 0.07 210);
   --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.99 0.005 230);
-  --border: oklch(0.9 0.02 230);
-  --input: oklch(0.9 0.02 230);
-  --ring: oklch(0.72 0.12 232);
-  --chart-1: oklch(0.72 0.12 232);
-  --chart-2: oklch(0.78 0.11 195);
-  --chart-3: oklch(0.62 0.11 258);
-  --chart-4: oklch(0.85 0.08 220);
-  --chart-5: oklch(0.68 0.13 175);
-  --sidebar: oklch(0.98 0.012 230);
-  --sidebar-foreground: oklch(0.28 0.05 245);
-  --sidebar-primary: oklch(0.72 0.12 232);
-  --sidebar-primary-foreground: oklch(0.99 0.005 230);
-  --sidebar-accent: oklch(0.93 0.04 228);
-  --sidebar-accent-foreground: oklch(0.32 0.06 240);
-  --sidebar-border: oklch(0.9 0.02 230);
-  --sidebar-ring: oklch(0.72 0.12 232);
-  --gradient-primary: linear-gradient(135deg, oklch(0.78 0.1 225), oklch(0.68 0.13 240));
+  --destructive-foreground: oklch(0.99 0.005 200);
+  --border: oklch(0.89 0.025 205);
+  --input: oklch(0.89 0.025 205);
+  --ring: oklch(0.65 0.17 210);
+  --chart-1: oklch(0.65 0.17 210);
+  --chart-2: oklch(0.72 0.13 180);
+  --chart-3: oklch(0.60 0.13 230);
+  --chart-4: oklch(0.82 0.08 200);
+  --chart-5: oklch(0.68 0.14 195);
+  --sidebar: oklch(0.97 0.015 205);
+  --sidebar-foreground: oklch(0.25 0.05 210);
+  --sidebar-primary: oklch(0.65 0.17 210);
+  --sidebar-primary-foreground: oklch(0.99 0.005 200);
+  --sidebar-accent: oklch(0.91 0.05 205);
+  --sidebar-accent-foreground: oklch(0.28 0.07 210);
+  --sidebar-border: oklch(0.89 0.025 205);
+  --sidebar-ring: oklch(0.65 0.17 210);
+  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.14 205), oklch(0.55 0.18 215));
   --shadow-soft: 0 8px 24px -14px oklch(0.4 0 0 / 0.12);
 }
 
-/* Tema cerah dengan gradasi */
+/* Cyan (default) */
+html.theme-cyan {
+  --primary: oklch(0.65 0.17 210);
+  --primary-foreground: oklch(0.99 0.005 200);
+  --primary-glow: oklch(0.55 0.18 215);
+  --accent: oklch(0.91 0.05 205);
+  --accent-foreground: oklch(0.28 0.07 210);
+  --ring: oklch(0.65 0.17 210);
+  --chart-1: oklch(0.65 0.17 210);
+  --chart-2: oklch(0.72 0.13 180);
+  --chart-3: oklch(0.60 0.13 230);
+  --chart-4: oklch(0.82 0.08 200);
+  --chart-5: oklch(0.68 0.14 195);
+  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.14 205), oklch(0.55 0.18 215));
+}
+
 html.theme-sky {
   --primary: oklch(0.72 0.12 232);
   --primary-foreground: oklch(0.99 0.005 230);
@@ -200,9 +215,10 @@ html.theme-lavender {
 }
 
 /* Error illustration filter — mengikuti warna tema */
-html.theme-sky    { --illustration-filter: sepia(1) saturate(3) hue-rotate(175deg) brightness(0.9); }
-html.theme-mint   { --illustration-filter: sepia(1) saturate(3) hue-rotate(100deg) brightness(0.9); }
-html.theme-coral  { --illustration-filter: sepia(1) saturate(4) hue-rotate(320deg) brightness(0.95); }
+html.theme-cyan    { --illustration-filter: sepia(1) saturate(4) hue-rotate(150deg) brightness(0.92); }
+html.theme-sky     { --illustration-filter: sepia(1) saturate(3) hue-rotate(175deg) brightness(0.9); }
+html.theme-mint    { --illustration-filter: sepia(1) saturate(3) hue-rotate(100deg) brightness(0.9); }
+html.theme-coral   { --illustration-filter: sepia(1) saturate(4) hue-rotate(320deg) brightness(0.95); }
 html.theme-lavender { --illustration-filter: sepia(1) saturate(2) hue-rotate(210deg) brightness(0.9); }
 
 @layer base {

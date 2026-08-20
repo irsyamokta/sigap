@@ -17,6 +17,12 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
+# Default dummy DATABASE_URL for build-time Prisma client generation
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/db_sigap"
+
+# Generate Prisma Client
+RUN npx prisma generate
+
 # Embed API key ke dalam bundle saat build
 ARG GEMINI_API_KEY
 ENV GEMINI_API_KEY=$GEMINI_API_KEY
@@ -40,6 +46,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/serve.mjs ./serve.mjs
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 

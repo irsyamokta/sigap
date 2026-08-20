@@ -1,10 +1,12 @@
-import { CalendarDays, Filter, Menu, X } from "lucide-react";
+import { CalendarDays, Filter, Menu, X, LogOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "@tanstack/react-router";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { puskesmasList, type PuskesmasId } from "@/data/dashboard";
 import { id } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
+import { logoutFn } from "@/lib/auth";
 
 interface FilterDropdownProps {
   puskesmas: PuskesmasId;
@@ -32,6 +34,7 @@ function FilterDropdown({ puskesmas, onPuskesmasChange }: FilterDropdownProps) {
 }
 
 interface NavbarProps {
+  user: any;
   scrolled: boolean;
   periodeLabel: string;
   range: DateRange | undefined;
@@ -42,6 +45,7 @@ interface NavbarProps {
 }
 
 export function Navbar({
+  user,
   scrolled,
   periodeLabel,
   range,
@@ -50,10 +54,16 @@ export function Navbar({
   onPuskesmasChange,
   defaultRange,
 }: NavbarProps) {
+  const router = useRouter();
   const [openFilter, setOpenFilter] = useState(false);
   const [openMobileMenu, setOpenMobileMenu] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = async () => {
+    await logoutFn();
+    router.invalidate();
+  };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -111,38 +121,52 @@ export function Navbar({
             </PopoverContent>
           </Popover>
 
-          <button
-            onClick={() => setOpenFilter((v) => !v)}
-            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${
-              openFilter || puskesmas !== "all"
-                ? "border-primary bg-accent text-accent-foreground"
-                : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
-            }`}
-          >
-            <Filter className="size-4 text-primary" />
-            Filter
-          </button>
+          {user.role === "DINKES" && (
+            <>
+              <button
+                onClick={() => setOpenFilter((v) => !v)}
+                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${
+                  openFilter || puskesmas !== "all"
+                    ? "border-primary bg-accent text-accent-foreground"
+                    : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                <Filter className="size-4 text-primary" />
+                Filter
+              </button>
 
-          {openFilter && (
-            <div className="absolute top-12 right-0 z-30 w-72 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
-              <p className="mb-2 text-xs font-semibold text-foreground">Puskesmas</p>
-              <FilterDropdown puskesmas={puskesmas} onPuskesmasChange={onPuskesmasChange} />
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={handleReset}
-                  className="flex-1 rounded-lg border border-border px-3 py-2 text-xs text-foreground hover:bg-accent hover:text-accent-foreground"
-                >
-                  Reset
-                </button>
-                <button
-                  onClick={() => setOpenFilter(false)}
-                  className="flex-1 rounded-lg px-3 py-2 text-xs text-primary-foreground [background:var(--gradient-primary)]"
-                >
-                  Terapkan
-                </button>
-              </div>
-            </div>
+              {openFilter && (
+                <div className="absolute top-12 right-0 z-30 w-72 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
+                  <p className="mb-2 text-xs font-semibold text-foreground">Puskesmas</p>
+                  <FilterDropdown puskesmas={puskesmas} onPuskesmasChange={onPuskesmasChange} />
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={handleReset}
+                      className="flex-1 rounded-lg border border-border px-3 py-2 text-xs text-foreground hover:bg-accent hover:text-accent-foreground"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={() => setOpenFilter(false)}
+                      className="flex-1 rounded-lg px-3 py-2 text-xs text-primary-foreground [background:var(--gradient-primary)]"
+                    >
+                      Terapkan
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
+
+          {/* Logout Button Desktop */}
+          <button
+            onClick={handleLogout}
+            title="Keluar"
+            className="flex items-center gap-2 rounded-lg border border-border bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-all hover:bg-red-100 hover:border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
         </div>
 
         {/* Mobile hamburger */}
@@ -167,8 +191,12 @@ export function Navbar({
                 initialFocus
                 className="pointer-events-auto"
               />
-              <p className="mt-4 mb-2 text-xs font-semibold text-foreground">Puskesmas</p>
-              <FilterDropdown puskesmas={puskesmas} onPuskesmasChange={onPuskesmasChange} />
+              {user.role === "DINKES" && (
+                <>
+                  <p className="mt-4 mb-2 text-xs font-semibold text-foreground">Puskesmas</p>
+                  <FilterDropdown puskesmas={puskesmas} onPuskesmasChange={onPuskesmasChange} />
+                </>
+              )}
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={handleReset}
@@ -181,6 +209,15 @@ export function Navbar({
                   className="flex-1 rounded-lg px-3 py-2 text-xs text-primary-foreground [background:var(--gradient-primary)]"
                 >
                   Terapkan
+                </button>
+              </div>
+              <div className="mt-3 border-t border-border pt-3">
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-all hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
                 </button>
               </div>
             </div>

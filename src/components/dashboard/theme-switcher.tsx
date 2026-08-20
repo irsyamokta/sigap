@@ -1,26 +1,27 @@
 import { Moon, Settings, Sun } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-type ThemeKey = "sky" | "mint" | "coral" | "lavender";
+type ThemeKey = "cyan" | "sky" | "mint" | "coral" | "lavender";
 type Mode = "light" | "dark";
 
 const themes: { key: ThemeKey; label: string; gradient: string }[] = [
-  { key: "sky", label: "Biru Langit", gradient: "from-sky-400 to-blue-600" },
-  { key: "mint", label: "Hijau Mint", gradient: "from-emerald-400 to-teal-600" },
-  { key: "coral", label: "Oranye Coral", gradient: "from-orange-400 to-rose-500" },
-  { key: "lavender", label: "Ungu Lavender", gradient: "from-violet-400 to-fuchsia-500" },
+  { key: "cyan",     label: "Cyan (Default)", gradient: "from-cyan-400 to-cyan-600" },
+  { key: "sky",      label: "Biru Langit",    gradient: "from-sky-400 to-blue-600" },
+  { key: "mint",     label: "Hijau Mint",     gradient: "from-emerald-400 to-teal-600" },
+  { key: "coral",    label: "Oranye Coral",   gradient: "from-orange-400 to-rose-500" },
+  { key: "lavender", label: "Ungu Lavender",  gradient: "from-violet-400 to-fuchsia-500" },
 ];
 
 export function ThemeSwitcher() {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemeKey>("sky");
+  const [theme, setTheme] = useState<ThemeKey>("cyan");
   const [mode, setMode] = useState<Mode>("light");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Sync state from DOM values set by the blocking theme script
     const savedTheme = localStorage.getItem("dashboard-theme") as ThemeKey | null;
-    const validTheme = savedTheme && themes.some((t) => t.key === savedTheme) ? savedTheme : "sky";
+    const validTheme = savedTheme && themes.some((t) => t.key === savedTheme) ? savedTheme : "cyan";
     setTheme(validTheme);
 
     const isDark = document.documentElement.classList.contains("dark");

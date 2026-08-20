@@ -10,6 +10,7 @@ import {
 import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import error500Svg from "../assets/500.svg";
 
 function NotFoundComponent() {
   return (
@@ -38,7 +39,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
       <img
-        src="/src/assets/500.svg"
+        src={error500Svg}
         alt="Ilustrasi error server"
         className="mb-6 w-full max-w-sm opacity-90 [filter:var(--illustration-filter)]"
       />
@@ -91,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
-  const themeScript = `(function(){try{var t=localStorage.getItem('dashboard-theme')||'sky';var m=localStorage.getItem('dashboard-mode');var v=['sky','mint','coral','lavender'];if(v.indexOf(t)===-1)t='sky';document.documentElement.classList.add('theme-'+t);if(m==='dark'||(!m&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`;
+  const themeScript = `(function(){try{var t=localStorage.getItem('dashboard-theme')||'cyan';var m=localStorage.getItem('dashboard-mode');var v=['cyan','sky','mint','coral','lavender'];if(v.indexOf(t)===-1)t='cyan';document.documentElement.classList.add('theme-'+t);if(m==='dark'||(!m&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`;
 
   return (
     <html lang="en" suppressHydrationWarning>

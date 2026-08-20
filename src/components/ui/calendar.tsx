@@ -23,7 +23,7 @@ function CustomMonthCaption(
     formatters: { formatMonthCaption },
     locale,
     months,
-  } = useDayPicker();
+  } = useDayPicker() as any;
 
   const isFirst = displayIndex === 0;
   const isLast = displayIndex === months.length - 1;
@@ -67,9 +67,9 @@ function CustomMonthCaption(
   );
 }
 
-// Sembunyikan Nav bawaan karena sudah digantikan CustomMonthCaption
+// Hide default Navigation since it is replaced by CustomMonthCaption
 function HiddenNav() {
-  return null;
+  return <></>;
 }
 
 function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
@@ -107,10 +107,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ...classNames,
       }}
       components={{
-        Nav: HiddenNav,
-        MonthCaption: CustomMonthCaption as React.ComponentType<
-          React.HTMLAttributes<HTMLDivElement>
-        >,
+        Nav: HiddenNav as any,
+        MonthCaption: CustomMonthCaption as any,
         Chevron: ({ orientation }) =>
           orientation === "left" ? (
             <ChevronLeft className="h-4 w-4" />
