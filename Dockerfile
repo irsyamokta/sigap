@@ -23,6 +23,9 @@ ENV GEMINI_API_KEY=$GEMINI_API_KEY
 
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
+# Jalankan prisma generate agar client ter-generate untuk OS Linux target
+RUN npx prisma generate
+
 RUN npm run build
 
 # ── Stage 2: Runner ────────────────────────────────────────────────────────────
@@ -41,7 +44,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/serve.mjs ./serve.mjs
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
 EXPOSE 3000
 
-CMD ["node", "serve.mjs"]
+CMD ["sh", "-c", "npx prisma db push && node serve.mjs"]
