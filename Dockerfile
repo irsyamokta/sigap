@@ -12,17 +12,14 @@ RUN apt-get update && apt-get install -y \
 
 COPY package.json ./
 
+# Copy prisma schema BEFORE npm install so @prisma/client postinstall hook
+# can find schema.prisma and auto-generate the client during npm install
+COPY prisma ./prisma
+
 # package-lock.json dikecualikan via .dockerignore karena berisi binary path Windows.
 RUN npm install --legacy-peer-deps
 
 COPY . .
-
-# Default dummy DATABASE_URL for build-time Prisma client generation
-ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/db_sigap"
-
-# Generate Prisma Client (--no-engine: project uses @prisma/adapter-pg driver adapter,
-# so the Rust query engine binary is not needed and can be skipped entirely)
-RUN npx prisma generate --no-engine
 
 # Embed API key ke dalam bundle saat build
 ARG GEMINI_API_KEY
