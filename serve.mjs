@@ -14,12 +14,22 @@ app.use(
 );
 
 app.use(
+  "/data/*",
+  serveStatic({ root: "./dist/client" }),
+);
+
+app.use(
   "/favicon.png",
   serveStatic({ root: "./dist/client" }),
 );
 
 app.use(
   "/robots.txt",
+  serveStatic({ root: "./dist/client" }),
+);
+
+app.use(
+  "/login-illustration.jpg",
   serveStatic({ root: "./dist/client" }),
 );
 

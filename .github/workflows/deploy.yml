@@ -78,4 +78,5 @@ jobs:
             docker compose pull
             docker compose up -d --remove-orphans
             docker compose exec -T app npx prisma db push
+            docker compose exec -T app npx prisma db seed
             docker image prune -f
