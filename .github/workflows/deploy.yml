@@ -54,6 +54,16 @@ jobs:
           build-args: |
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 
+      - name: Copy docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "docker-compose.yml"
+          target: "~/apps/sigap"
+
       - name: Deploy on VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
