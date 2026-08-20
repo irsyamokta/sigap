@@ -34,7 +34,18 @@ function LoginPage() {
       await router.invalidate();
       navigate({ to: "/" });
     } catch (err: any) {
-      setError(err.message || "Gagal login. Silakan periksa kembali kredensial Anda.");
+      const msg = err.message || "Gagal login. Silakan periksa kembali kredensial Anda.";
+      const isKnownUserError =
+        msg.includes("Email atau password salah") ||
+        msg.includes("Format email tidak valid") ||
+        msg.includes("Password tidak boleh kosong");
+
+      if (isKnownUserError) {
+        setError(msg);
+      } else {
+        const isDev = import.meta.env.DEV;
+        setError(isDev ? msg : "Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.");
+      }
     } finally {
       setLoading(false);
     }
@@ -56,55 +67,55 @@ function LoginPage() {
               className="w-full object-contain drop-shadow-sm"
             />
 
-            {/* Metric: Active Puskesmas count */}
+            {/* Feature: AI Summary with Gemini */}
             <div className="absolute top-6 -left-10 bg-white rounded-2xl shadow-lg px-3 py-2.5 flex items-center gap-2.5 min-w-max">
               <div className="h-8 w-8 rounded-xl bg-cyan-100 flex items-center justify-center flex-shrink-0">
                 <svg className="h-4 w-4 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.813 15.904L9 21L8.188 15.904L3 15L8.188 14.096L9 9L9.813 14.096L15 15L9.813 15.904Z M19.071 4.929L18.5 8L17.929 4.929L15 4.358L17.929 3.786L18.5 0.714L19.071 3.786L22 4.358L19.071 4.929Z" />
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-gray-400 leading-none">Puskesmas</p>
-                <p className="text-sm font-bold text-gray-800">39 Unit</p>
+                <p className="text-xs text-gray-400 leading-none">Ringkasan AI</p>
+                <p className="text-sm font-bold text-gray-800">Gemini Integrasi</p>
               </div>
             </div>
 
-            {/* Metric: Today's patient queue count */}
+            {/* Feature: Disease Trend Analysis */}
             <div className="absolute top-16 -right-10 bg-white rounded-2xl shadow-lg px-3 py-2.5 flex items-center gap-2.5 min-w-max">
               <div className="h-8 w-8 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
                 <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-gray-400 leading-none">Pasien Hari Ini</p>
-                <p className="text-sm font-bold text-gray-800">1.284</p>
+                <p className="text-xs text-gray-400 leading-none">Tren Penyakit</p>
+                <p className="text-sm font-bold text-gray-800">Analisis Real-Time</p>
               </div>
             </div>
 
-            {/* Metric: Active early warnings / health alerts */}
+            {/* Feature: Early Warning System (EWS) */}
             <div className="absolute bottom-10 -left-10 bg-white rounded-2xl shadow-lg px-3 py-2.5 flex items-center gap-2.5 min-w-max">
               <div className="h-8 w-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
                 <svg className="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-gray-400 leading-none">Peringatan Aktif</p>
-                <p className="text-sm font-bold text-gray-800">3 Kasus</p>
+                <p className="text-xs text-gray-400 leading-none">Deteksi Dini</p>
+                <p className="text-sm font-bold text-gray-800">Sistem EWS</p>
               </div>
             </div>
 
-            {/* Metric: Overall data verification rate */}
+            {/* Feature: Geospatial Disease Mapping */}
             <div className="absolute bottom-2 -right-10 bg-white rounded-2xl shadow-lg px-3 py-2.5 flex items-center gap-2.5 min-w-max">
               <div className="h-8 w-8 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
                 <svg className="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
               <div>
-                <p className="text-xs text-gray-400 leading-none">Akurasi Data</p>
-                <p className="text-sm font-bold text-gray-800">98.5%</p>
+                <p className="text-xs text-gray-400 leading-none">Peta Penyakit</p>
+                <p className="text-sm font-bold text-gray-800">Sebaran Geografis</p>
               </div>
             </div>
           </div>
