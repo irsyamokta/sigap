@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, useRouter, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { RotateCw } from "lucide-react";
 import { loginFn, getAuthUserFn } from "@/lib/auth";
+import { generateCaptchaCode, generateCaptchaImage } from "@/lib/captcha";
 import logoBanyumas from "@/assets/logo-banyumas.png";
 import illustrationSvg from "@/assets/illustration.svg";
 
@@ -21,12 +23,33 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captchaCode, setCaptchaCode] = useState("");
+  const [captchaImage, setCaptchaImage] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
   const router = useRouter();
   const navigate = useNavigate();
+
+  const refreshCaptcha = () => {
+    const code = generateCaptchaCode();
+    setCaptchaCode(code);
+    setCaptchaImage(generateCaptchaImage(code));
+  };
+
+  useEffect(() => {
+    refreshCaptcha();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (captchaInput !== captchaCode) {
+      setError("Kode CAPTCHA tidak sesuai. Silakan coba lagi.");
+      refreshCaptcha();
+      setCaptchaInput("");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -135,10 +158,10 @@ function LoginPage() {
 
       {/* Right panel: Authenticator Form */}
       <div className="flex-1 flex w-full lg:w-1/2 items-center justify-center p-8 sm:p-12 lg:p-16">
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-w-md space-y-4">
           <div className="text-center lg:text-left">
             {/* Local government district branding */}
-            <div className="flex items-center gap-3 mb-8 justify-center lg:justify-start">
+            <div className="flex items-center gap-3 mb-4 justify-center lg:justify-start">
               <img
                 src={logoBanyumas}
                 alt="Logo Kabupaten Banyumas"
@@ -158,22 +181,20 @@ function LoginPage() {
             </p>
           </div>
 
-          {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* Error Message Box */}
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${error ? "max-h-16 opacity-100" : "max-h-0 opacity-0"}`}>
+              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-red-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="text-xs font-semibold text-red-700 leading-tight">{error}</p>
                 </div>
               </div>
             </div>
-          )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
+            {/* Email */}
             <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">
                 Alamat Email
@@ -188,6 +209,7 @@ function LoginPage() {
               />
             </div>
 
+            {/* Password */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-700">
@@ -202,6 +224,49 @@ function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
+            </div>
+
+            {/* Captcha */}
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Kode Verifikasi (CAPTCHA)
+              </label>
+              <div className="flex items-center gap-3">
+                <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-slate-50 flex items-center justify-center h-12 w-36 select-none shadow-sm flex-shrink-0">
+                  {captchaImage ? (
+                    <img
+                      src={captchaImage}
+                      alt="CAPTCHA Code"
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-xs text-gray-400">Memuat...</div>
+                  )}
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={refreshCaptcha}
+                  className="p-3 rounded-xl border border-gray-300 hover:bg-slate-50 text-gray-500 hover:text-cyan-600 hover:border-cyan-600 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-600/20 shadow-sm flex items-center justify-center h-12 w-12"
+                  title="Ganti Kode CAPTCHA"
+                >
+                  <RotateCw className="h-5 w-5" />
+                </button>
+                
+                <input
+                  type="text"
+                  required
+                  className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-600/20 sm:text-sm transition-shadow font-mono tracking-widest text-center h-12"
+                  value={captchaInput}
+                  onChange={(e) => setCaptchaInput(e.target.value)}
+                  placeholder="Kode"
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+              </div>
+              <p className="text-[10px] text-gray-400">
+                Sensitif huruf besar/kecil (case-sensitive).
+              </p>
             </div>
 
             <button
