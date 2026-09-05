@@ -14,8 +14,6 @@ import {
 } from "recharts";
 import type { DashboardData } from "@/data/dashboard";
 
-// ─── EWS Alert Banner ────────────────────────────────────────────────────────
-
 interface EwsAlertBannerProps {
   alerts: DashboardData["ewsAlerts"];
 }
@@ -120,17 +118,15 @@ function EwsTooltip({ active, payload, label }: any) {
   );
 }
 
-// ─── EWS Trend Chart ─────────────────────────────────────────────────────────
-
 interface EwsTrendChartProps {
   data: DashboardData["ewsTren"];
 }
 
 export function EwsTrendChart({ data }: EwsTrendChartProps) {
   // Find the threshold values (constant across all weeks scaled to puskesmas)
-  const thresholdDbd   = data[0]?.thresholdDbd   ?? 75;
-  const thresholdDiare = data[0]?.thresholdDiare ?? 110;
-  const thresholdIspa  = data[0]?.thresholdIspa  ?? 160;
+  const thresholdDbd   = data[0]?.thresholdDbd   ?? 28;
+  const thresholdDiare = data[0]?.thresholdDiare ?? 55;
+  const thresholdIspa  = data[0]?.thresholdIspa  ?? 120;
 
   // Max Y for domain
   const maxVal = Math.max(

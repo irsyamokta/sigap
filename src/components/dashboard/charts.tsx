@@ -76,15 +76,42 @@ export function TrenPerawatanChart({
   );
 }
 
+const NAKES_SHORT_LABELS: Record<string, string> = {
+  "Dokter": "Dokter",
+  "Dokter Gigi": "Dr. Gigi",
+  "Perawat": "Perawat",
+  "Bidan": "Bidan",
+  "Tenaga Kesehatan Masyarakat": "Kesmas",
+  "Tenaga Kesehatan Lingkungan (Sanitarian)": "Sanitarian",
+  "Ahli Teknologi Laboratorium Medik (ATLM)": "ATLM",
+  "Tenaga Gizi (Nutrisionis)": "Gizi",
+  "Tenaga Kefarmasian": "Farmasi",
+};
+
 export function TenagaBarChart({ data }: { data: { nama: string; jumlah: number }[] }) {
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={230}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -22, bottom: 25 }}>
         <CartesianGrid strokeDasharray="4 4" stroke="var(--color-border)" vertical={false} />
-        <XAxis dataKey="nama" {...axisProps} />
+        <XAxis
+          dataKey="nama"
+          {...axisProps}
+          tickFormatter={(name) => NAKES_SHORT_LABELS[name] ?? name}
+          interval={0}
+          angle={-30}
+          textAnchor="end"
+          height={40}
+        />
         <YAxis {...axisProps} />
-        <Tooltip {...tooltipStyle} cursor={{ fill: "var(--color-accent)" }} />
-        <Bar dataKey="jumlah" name="Jumlah" fill="var(--color-primary)" radius={[6, 6, 0, 0]} barSize={22} />
+        <Tooltip
+          {...tooltipStyle}
+          cursor={{ fill: "var(--color-accent)" }}
+          formatter={(value: any, name: any, item: any) => [
+            `${value} orang`,
+            item?.payload?.nama ?? name,
+          ]}
+        />
+        <Bar dataKey="jumlah" name="Tersedia" fill="var(--color-primary)" radius={[4, 4, 0, 0]} barSize={16} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -96,19 +123,33 @@ export function StandarTenagaChart({
   data: { nama: string; tersedia: number; kebutuhan: number }[];
 }) {
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={320}>
       <BarChart
         data={data}
         layout="vertical"
-        margin={{ top: 8, right: 12, left: 12, bottom: 0 }}
+        margin={{ top: 8, right: 12, left: 16, bottom: 0 }}
         barGap={2}
       >
         <CartesianGrid strokeDasharray="4 4" stroke="var(--color-border)" horizontal={false} />
         <XAxis type="number" {...axisProps} />
-        <YAxis type="category" dataKey="nama" width={62} {...axisProps} />
-        <Tooltip {...tooltipStyle} cursor={{ fill: "var(--color-accent)" }} />
-        <Bar dataKey="tersedia" name="Tersedia" fill="var(--color-primary)" radius={[0, 5, 5, 0]} barSize={10} />
-        <Bar dataKey="kebutuhan" name="Kebutuhan" fill="var(--color-chart-3)" radius={[0, 5, 5, 0]} barSize={10} />
+        <YAxis
+          type="category"
+          dataKey="nama"
+          width={75}
+          {...axisProps}
+          tickFormatter={(name) => NAKES_SHORT_LABELS[name] ?? name}
+          fontSize={10}
+        />
+        <Tooltip
+          {...tooltipStyle}
+          cursor={{ fill: "var(--color-accent)" }}
+          formatter={(value: any, name: any, item: any) => [
+            `${value} orang`,
+            `${name} (${item?.payload?.nama ?? ""})`,
+          ]}
+        />
+        <Bar dataKey="tersedia" name="Tersedia" fill="var(--color-primary)" radius={[0, 4, 4, 0]} barSize={8} />
+        <Bar dataKey="kebutuhan" name="Kebutuhan" fill="var(--color-chart-3)" radius={[0, 4, 4, 0]} barSize={8} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -148,18 +189,20 @@ export function RasioDonut({ value }: { value: number }) {
 
 export function PerbandinganChart({
   data,
+  height = 260,
 }: {
   data: { bulan: string; pasien: number; kapasitas: number }[];
+  height?: number;
 }) {
   return (
-    <ResponsiveContainer width="100%" height={190}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
         <CartesianGrid strokeDasharray="4 4" stroke="var(--color-border)" vertical={false} />
         <XAxis dataKey="bulan" {...axisProps} />
         <YAxis {...axisProps} />
         <Tooltip {...tooltipStyle} cursor={{ fill: "var(--color-accent)" }} />
-        <Bar dataKey="pasien" name="Pasien" fill="var(--color-primary)" radius={[5, 5, 0, 0]} barSize={12} />
-        <Bar dataKey="kapasitas" name="Kapasitas" fill="var(--color-chart-4)" radius={[5, 5, 0, 0]} barSize={12} />
+        <Bar dataKey="pasien" name="Pasien" fill="var(--color-primary)" radius={[5, 5, 0, 0]} barSize={16} />
+        <Bar dataKey="kapasitas" name="Kapasitas" fill="var(--color-chart-4)" radius={[5, 5, 0, 0]} barSize={16} />
       </BarChart>
     </ResponsiveContainer>
   );

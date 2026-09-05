@@ -13,35 +13,51 @@ export const puskesmasList: { id: PuskesmasId; nama: string }[] = [
 
 const clampPct = (n: number) => Math.max(3, Math.min(100, Math.round(n)));
 
-// Static workforce data per puskesmas (since this rarely changes daily)
+// Static workforce data per puskesmas (9 Standar Tenaga Kesehatan Kemenkes)
 const workforceData: Record<string, { nama: string, tersedia: number, kebutuhan: number }[]> = {
   purwokerto_barat: [
     { nama: "Dokter", tersedia: 6, kebutuhan: 8 },
+    { nama: "Dokter Gigi", tersedia: 2, kebutuhan: 2 },
     { nama: "Perawat", tersedia: 20, kebutuhan: 22 },
     { nama: "Bidan", tersedia: 5, kebutuhan: 6 },
-    { nama: "Dokter Gigi", tersedia: 2, kebutuhan: 2 },
-    { nama: "Kesmas", tersedia: 3, kebutuhan: 4 },
+    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 3, kebutuhan: 4 },
+    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 2, kebutuhan: 3 },
+    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 2, kebutuhan: 2 },
+    { nama: "Tenaga Kefarmasian", tersedia: 3, kebutuhan: 4 },
   ],
   patikraja: [
     { nama: "Dokter", tersedia: 3, kebutuhan: 4 },
-    { nama: "Perawat", tersedia: 12, kebutuhan: 12 },
-    { nama: "Bidan", tersedia: 3, kebutuhan: 4 },
     { nama: "Dokter Gigi", tersedia: 1, kebutuhan: 1 },
-    { nama: "Kesmas", tersedia: 2, kebutuhan: 2 },
+    { nama: "Perawat", tersedia: 12, kebutuhan: 14 },
+    { nama: "Bidan", tersedia: 3, kebutuhan: 4 },
+    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 2, kebutuhan: 2 },
+    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Tenaga Kefarmasian", tersedia: 2, kebutuhan: 2 },
   ],
   sokaraja_1: [
     { nama: "Dokter", tersedia: 5, kebutuhan: 5 },
+    { nama: "Dokter Gigi", tersedia: 1, kebutuhan: 2 },
     { nama: "Perawat", tersedia: 15, kebutuhan: 18 },
     { nama: "Bidan", tersedia: 4, kebutuhan: 4 },
-    { nama: "Dokter Gigi", tersedia: 1, kebutuhan: 2 },
-    { nama: "Kesmas", tersedia: 3, kebutuhan: 3 },
+    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 3, kebutuhan: 3 },
+    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 2, kebutuhan: 2 },
+    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Tenaga Kefarmasian", tersedia: 2, kebutuhan: 3 },
   ],
   kembaran_1: [
     { nama: "Dokter", tersedia: 4, kebutuhan: 5 },
+    { nama: "Dokter Gigi", tersedia: 2, kebutuhan: 2 },
     { nama: "Perawat", tersedia: 11, kebutuhan: 14 },
     { nama: "Bidan", tersedia: 2, kebutuhan: 3 },
-    { nama: "Dokter Gigi", tersedia: 2, kebutuhan: 2 },
-    { nama: "Kesmas", tersedia: 2, kebutuhan: 3 },
+    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 2, kebutuhan: 3 },
+    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 1, kebutuhan: 2 },
+    { nama: "Tenaga Kefarmasian", tersedia: 2, kebutuhan: 3 },
   ]
 };
 
@@ -79,9 +95,9 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
   // Per-puskesmas weekly EWS tracking (also keyed by ISO week start)
   const perPuskesmasEwsMap = new Map<string, Map<string, { dbd: number, diare: number, ispa: number }>>();
 
-  // Determine grouping based on range duration (if > 60 days group by month, else by week)
+  // Determine grouping based on range duration (if > 30 days group by month, else by week)
   const daysDiff = (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
-  const groupBy = daysDiff > 60 ? "month" : "week";
+  const groupBy = daysDiff > 30 ? "month" : "week";
 
   for (const d of filtered) {
     pasienSakit += d.kunjungan.sakit;
@@ -167,10 +183,11 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
     pE.ispa += d.penyakit.ISPA ?? 0;
   }
 
-  // Finalize Top Diseases
+  // Finalize Top 10 Diseases
   const totalPenyakit = Object.values(penyakitCount).reduce((a, b) => a + b, 0) || 1;
   const penyakitTeratas = Object.entries(penyakitCount)
     .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
     .map(([nama, kasus]) => ({
       nama,
       persen: Number(((kasus / totalPenyakit) * 100).toFixed(1))
@@ -197,21 +214,27 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
     okupansiRuang.push({ bulan: data.label, okupansi: avgKapasitas ? clampPct((avgPasien / avgKapasitas) * 100) : 0 });
   }
 
-  // Finalize Workforce
+  // Finalize Workforce (9 Standar Tenaga Kesehatan Kemenkes)
   const standarTenaga: { nama: string, tersedia: number, kebutuhan: number }[] = [
     { nama: "Dokter", tersedia: 0, kebutuhan: 0 },
+    { nama: "Dokter Gigi", tersedia: 0, kebutuhan: 0 },
     { nama: "Perawat", tersedia: 0, kebutuhan: 0 },
     { nama: "Bidan", tersedia: 0, kebutuhan: 0 },
-    { nama: "Dokter Gigi", tersedia: 0, kebutuhan: 0 },
-    { nama: "Kesmas", tersedia: 0, kebutuhan: 0 },
+    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 0, kebutuhan: 0 },
+    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 0, kebutuhan: 0 },
+    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 0, kebutuhan: 0 },
+    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 0, kebutuhan: 0 },
+    { nama: "Tenaga Kefarmasian", tersedia: 0, kebutuhan: 0 },
   ];
 
   const targetPuskesmas = pId === "all" ? Object.keys(workforceData) : [pId];
   for (const p of targetPuskesmas) {
     const wf = workforceData[p];
-    for (let i = 0; i < standarTenaga.length; i++) {
-      standarTenaga[i].tersedia += wf[i].tersedia;
-      standarTenaga[i].kebutuhan += wf[i].kebutuhan;
+    if (wf) {
+      for (let i = 0; i < standarTenaga.length; i++) {
+        standarTenaga[i].tersedia += wf[i].tersedia;
+        standarTenaga[i].kebutuhan += wf[i].kebutuhan;
+      }
     }
   }
 
@@ -220,11 +243,58 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
   const totalKebutuhan = standarTenaga.reduce((a, b) => a + b.kebutuhan, 0);
   const rasio = totalKebutuhan ? clampPct((totalTenaga / totalKebutuhan) * 100) : 0;
 
-  // EWS 
+  // Analisis Prioritas Puskesmas / Profesi yang Membutuhkan Tenaga Kesehatan
+  const analisisPrioritas = puskesmasList
+    .filter((item) => item.id !== "all")
+    .map((item) => {
+      const wf = workforceData[item.id] || [];
+      const tersedia = wf.reduce((sum, n) => sum + n.tersedia, 0);
+      const kebutuhan = wf.reduce((sum, n) => sum + n.kebutuhan, 0);
+      const defisit = Math.max(0, kebutuhan - tersedia);
+      const rasioPct = kebutuhan ? clampPct((tersedia / kebutuhan) * 100) : 100;
+      const sortedByGap = [...wf].sort((a, b) => (b.kebutuhan - b.tersedia) - (a.kebutuhan - a.tersedia));
+      const topGapProfesi = sortedByGap[0];
+      const gapCount = topGapProfesi ? Math.max(0, topGapProfesi.kebutuhan - topGapProfesi.tersedia) : 0;
+      return {
+        id: item.id,
+        nama: item.nama,
+        singkat: item.nama.replace("Puskesmas ", ""),
+        tersedia,
+        kebutuhan,
+        defisit,
+        rasioPct,
+        topProfesi: topGapProfesi?.nama ?? "-",
+        topProfesiGap: gapCount,
+      };
+    })
+    .sort((a, b) => b.defisit - a.defisit);
+
+  const topPriorityPuskesmas = analisisPrioritas[0];
+  const currentPuskesmasPrioritas = analisisPrioritas.find((item) => item.id === pId);
+
+  const prioritasNakes = pId === "all"
+    ? {
+        label: "Prioritas Kebutuhan",
+        nama: topPriorityPuskesmas?.singkat ?? "Kembaran 1",
+        fullName: topPriorityPuskesmas?.nama ?? "Puskesmas Kembaran 1",
+        keterangan: `Kurang ${topPriorityPuskesmas?.defisit ?? 0} nakes (rasio ${topPriorityPuskesmas?.rasioPct ?? 0}%)`,
+      }
+    : {
+        label: "Profesi Prioritas",
+        nama: currentPuskesmasPrioritas?.topProfesi ?? "-",
+        fullName: currentPuskesmasPrioritas?.topProfesi ?? "-",
+        keterangan: currentPuskesmasPrioritas && currentPuskesmasPrioritas.topProfesiGap > 0
+          ? `Kurang ${currentPuskesmasPrioritas.topProfesiGap} nakes di unit ini`
+          : "Kebutuhan nakes terpenuhi",
+      };
+
+  // EWS — Threshold disesuaikan agar realistis dengan skala data mock:
+  // Combined (all):  DBD max ~34/mgg  → siaga 28 | Diare max ~66 → siaga 55 | ISPA max ~154 → siaga 120
+  // Per-puskesmas:   DBD max ~21/mgg  → siaga 17 | Diare max ~47 → siaga 38 | ISPA max ~107 → siaga  85
   const ewsThresholds = { 
-    dbd: pId === "all" ? 180 : 45, 
-    diare: pId === "all" ? 280 : 70, 
-    ispa: pId === "all" ? 400 : 100 
+    dbd:   pId === "all" ? 28  : 17, 
+    diare: pId === "all" ? 55  : 38, 
+    ispa:  pId === "all" ? 120 : 85
   };
   
   // Sort by ISO key (lexicographic = chronological for YYYY-MM-DD)
@@ -256,14 +326,30 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
     checkAlert("ISPA", latest.ispa, latest.thresholdIspa);
   }
 
-  // Use the ISO key for lookup (not the formatted display label)
-  const latestWeekKey = ewsTren.length > 0 ? (ewsTren[ewsTren.length - 1] as any)._isoKey : "";
   const puskesmasAlerts: Record<string, { penyakit: string; kasus: number; threshold: number; status: "SIAGA" | "WASPADA" }[]> = {};
-  const indThresholds = { dbd: 45, diare: 70, ispa: 100 };
+  // Individual puskesmas thresholds — set per-puskesmas for proportional sensitivity
+  // Purwokerto Barat has highest volume (ISPA max=107, Diare max=47, DBD max=21)
+  // Thresholds set at ~50-55% of historical max so some weeks trigger alerts
+  const puskesmasThresholds: Record<string, { dbd: number; diare: number; ispa: number }> = {
+    purwokerto_barat: { dbd: 13, diare: 27, ispa: 55 },
+    sokaraja_1:       { dbd: 11, diare: 20, ispa: 47 },
+    patikraja:        { dbd:  6, diare: 10, ispa: 22 },
+    kembaran_1:       { dbd:  8, diare: 13, ispa: 30 },
+  };
 
   for (const [pid, pEwsMap] of perPuskesmasEwsMap.entries()) {
-    const data = pEwsMap.get(latestWeekKey);
-    if (data) {
+    const thr = puskesmasThresholds[pid] ?? { dbd: 13, diare: 27, ispa: 55 };
+    // Find the week with highest ISPA (dominant disease) as the "peak" week
+    let peakData: { dbd: number; diare: number; ispa: number } | undefined;
+    let peakScore = -1;
+    for (const [, weekData] of pEwsMap.entries()) {
+      const score = weekData.dbd / thr.dbd + weekData.diare / thr.diare + weekData.ispa / thr.ispa;
+      if (score > peakScore) {
+        peakScore = score;
+        peakData = weekData;
+      }
+    }
+    if (peakData) {
       const alerts: { penyakit: string; kasus: number; threshold: number; status: "SIAGA" | "WASPADA" }[] = [];
       const checkIndAlert = (nama: string, kasus: number, threshold: number) => {
         if (kasus > threshold) {
@@ -272,52 +358,95 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
           alerts.push({ penyakit: nama, kasus, threshold, status: "WASPADA" });
         }
       };
-      checkIndAlert("DBD", data.dbd, indThresholds.dbd);
-      checkIndAlert("Diare", data.diare, indThresholds.diare);
-      checkIndAlert("ISPA", data.ispa, indThresholds.ispa);
+      checkIndAlert("DBD", peakData.dbd, thr.dbd);
+      checkIndAlert("Diare", peakData.diare, thr.diare);
+      checkIndAlert("ISPA", peakData.ispa, thr.ispa);
       puskesmasAlerts[pid] = alerts;
     }
   }
 
-  // Compare per-day rates between last two periods to avoid bias from incomplete current period
+  // Compare current period's per-day visit rate against the equivalent prior period (same number of days)
+  // Always label the comparison as "30 hari sebelumnya" for clarity to the user.
+  let trenPenyakitPct = 0;
+  const currentPeriodDays = Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24))) || 30;
+  const prevPeriodStart = subDays(startDate, currentPeriodDays);
+  const prevPeriodEnd = subDays(startDate, 1);
+
+  const prevFiltered = allData.filter(d => {
+    const dDate = parseISO(d.date);
+    const inRange = isWithinInterval(dDate, { start: prevPeriodStart, end: prevPeriodEnd });
+    const isPuskesmas = pId === "all" || d.puskesmasId === pId;
+    return inRange && isPuskesmas;
+  });
+  const prevTotalSakit = prevFiltered.reduce((sum, d) => sum + d.kunjungan.sakit, 0);
+  const prevDays = prevFiltered.length || 1;
+  const prevRate = prevTotalSakit / prevDays;
+  const currRate2 = pasienSakit / (filtered.length || 1);
+
   const trenPenyakit = (() => {
-    if (sortedTrenEntries.length < 2) return "Stabil";
-    const prev = sortedTrenEntries[sortedTrenEntries.length - 2][1];
-    const curr = sortedTrenEntries[sortedTrenEntries.length - 1][1];
-    const prevRate = prev.sakit / (prev.days || 1);
-    const currRate = curr.sakit / (curr.days || 1);
-    if (currRate > prevRate * 1.05) return "Meningkat";
-    if (currRate < prevRate * 0.95) return "Menurun";
+    if (prevRate === 0 && currRate2 === 0) return "Stabil";
+    if (prevRate > 0) {
+      trenPenyakitPct = Number((((currRate2 - prevRate) / prevRate) * 100).toFixed(1));
+    }
+    if (currRate2 > prevRate * 1.05) return "Meningkat";
+    if (currRate2 < prevRate * 0.95) return "Menurun";
     return "Stabil";
   })();
 
+  const trenPeriodLabel = `${currentPeriodDays} hari sebelumnya`;
+  const trenPenyakitHint = trenPenyakitPct !== 0
+    ? `${trenPenyakitPct > 0 ? "+" : ""}${trenPenyakitPct.toLocaleString("id-ID")}% dibanding ${trenPeriodLabel}`
+    : `Stabil dibanding ${trenPeriodLabel}`;
+
   // Build kunjungan harian chart data — always per calendar day
+  // Determine which puskesmas to display: if "all", select the one with highest total visits in the period; else the selected puskesmas
+  let targetPuskesmasKunjungan: PuskesmasId = pId;
+  let topPuskesmasNama = "";
+
+  if (pId === "all") {
+    let maxTotal = -1;
+    let topPid: PuskesmasId = "purwokerto_barat";
+    for (const p of puskesmasList.filter((item) => item.id !== "all")) {
+      const pDailyMap = perPuskesmasDailyMap.get(p.id);
+      const totalVisits = pDailyMap
+        ? Array.from(pDailyMap.values()).reduce((sum, v) => sum + v, 0)
+        : 0;
+      if (totalVisits > maxTotal) {
+        maxTotal = totalVisits;
+        topPid = p.id;
+      }
+    }
+    targetPuskesmasKunjungan = topPid;
+    topPuskesmasNama = puskesmasList.find((p) => p.id === topPid)?.nama ?? "Puskesmas";
+  } else {
+    topPuskesmasNama = puskesmasList.find((p) => p.id === pId)?.nama ?? "Puskesmas";
+  }
+
   // Sort daily entries chronologically (ISO string sort = chronological)
   const sortedDailyEntries = Array.from(dailyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
-  const kunjunganHarian = sortedDailyEntries.map(([isoDay, dayData]) => {
-    const row: Record<string, string | number> = { label: dayData.label };
-    if (pId === "all") {
-      for (const [pid, pDailyMap] of perPuskesmasDailyMap.entries()) {
-        row[pid] = pDailyMap.get(isoDay) ?? 0;
-      }
-    } else {
-      const pDailyMap = perPuskesmasDailyMap.get(pId);
-      row.total = pDailyMap?.get(isoDay) ?? 0;
-    }
-    return row;
-  });
+  const selectedDailyMap = perPuskesmasDailyMap.get(targetPuskesmasKunjungan);
+  const totalKunjunganPuskesmas = selectedDailyMap
+    ? Array.from(selectedDailyMap.values()).reduce((sum, v) => sum + v, 0)
+    : 0;
+
+  const kunjunganHarian = sortedDailyEntries.map(([isoDay, dayData]) => ({
+    label: dayData.label,
+    total: selectedDailyMap?.get(isoDay) ?? 0,
+  }));
 
   return {
     nama: puskesmasList.find((p) => p.id === pId)?.nama ?? "Semua Puskesmas",
     pasienSakit,
     pasienSembuh,
     trenPenyakit,
+    trenPenyakitHint,
     penyakitTeratas,
     tenagaPerProfesi,
     standarTenaga,
     totalTenaga,
     totalKebutuhan,
     rasio,
+    prioritasNakes,
     trenPerawatan,
     perbandinganKapasitas,
     okupansiRuang,
@@ -325,9 +454,14 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
     ewsTren,
     ewsAlerts,
     kunjunganHarian,
+    totalKunjunganPuskesmas,
+    kunjunganPuskesmasNama: topPuskesmasNama,
+    kunjunganPuskesmasId: targetPuskesmasKunjungan,
     isDinkesView: pId === "all",
     insight: [
-      `Kasus ${penyakitTeratas[0]?.nama} mendominasi dengan ${penyakitTeratas[0]?.persen}% dari total kasus.`,
+      penyakitTeratas.length > 0
+        ? `Kasus ${penyakitTeratas[0].nama} mendominasi dengan ${penyakitTeratas[0].persen}% dari total kasus.`
+        : "Belum ada data kasus penyakit pada periode ini.",
       `Tingkat kesembuhan pasien mencapai ${pasienSakit ? ((pasienSembuh / pasienSakit) * 100).toFixed(1) : 0}%.`,
       `Rasio kecukupan tenaga kesehatan saat ini ${rasio}%.`
     ],

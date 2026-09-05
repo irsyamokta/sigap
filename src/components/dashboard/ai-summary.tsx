@@ -1,5 +1,5 @@
 import { Loader2, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 interface AiSummaryProps {
@@ -12,26 +12,6 @@ export function AiSummary({ puskesmasNama, periodeLabel, onGenerate }: AiSummary
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [displayedSummary, setDisplayedSummary] = useState<string>("");
-
-  // Typewriter effect
-  useEffect(() => {
-    if (!summary) {
-      setDisplayedSummary("");
-      return;
-    }
-    setDisplayedSummary("");
-    let i = 0;
-    const interval = setInterval(() => {
-      i += 4;
-      setDisplayedSummary(summary.slice(0, i));
-      if (i >= summary.length) {
-        setDisplayedSummary(summary);
-        clearInterval(interval);
-      }
-    }, 16);
-    return () => clearInterval(interval);
-  }, [summary]);
 
   async function handleGenerate() {
     setLoading(true);
@@ -76,21 +56,25 @@ export function AiSummary({ puskesmasNama, periodeLabel, onGenerate }: AiSummary
       )}
 
       {summary && (
-        <div className="mt-4 rounded-xl border border-border bg-background/60 p-4">
+        <div className="mt-4 rounded-xl border border-border bg-background/60 p-4 transition-all duration-300 animate-in fade-in-50">
           <ReactMarkdown
             components={{
-              h1: ({ children }) => <h1 className="mb-2 text-sm font-bold text-foreground">{children}</h1>,
-              h2: ({ children }) => <h2 className="mb-2 text-sm font-semibold text-foreground">{children}</h2>,
-              h3: ({ children }) => <h3 className="mb-1 text-xs font-semibold text-foreground">{children}</h3>,
-              p: ({ children }) => <p className="mb-2 text-xs leading-relaxed text-foreground last:mb-0">{children}</p>,
-              ul: ({ children }) => <ul className="mb-2 space-y-1 pl-4">{children}</ul>,
-              ol: ({ children }) => <ol className="mb-2 space-y-1 pl-4 list-decimal">{children}</ol>,
-              li: ({ children }) => <li className="text-xs leading-relaxed text-foreground list-disc">{children}</li>,
+              h1: ({ children }) => <h1 className="mb-3 text-sm font-bold text-foreground">{children}</h1>,
+              h2: ({ children }) => (
+                <h2 className="mt-4 mb-2 text-xs font-bold uppercase tracking-wider text-primary border-b border-border/40 pb-1 first:mt-0">
+                  {children}
+                </h2>
+              ),
+              h3: ({ children }) => <h3 className="mt-2 mb-1 text-xs font-semibold text-foreground">{children}</h3>,
+              p: ({ children }) => <p className="mb-2 text-xs leading-relaxed text-foreground/90 last:mb-0">{children}</p>,
+              ul: ({ children }) => <ul className="mb-3 space-y-1.5 pl-1">{children}</ul>,
+              ol: ({ children }) => <ol className="mb-3 space-y-1.5 pl-4 list-decimal text-xs">{children}</ol>,
+              li: ({ children }) => <li className="text-xs leading-relaxed text-foreground/90 list-disc ml-4">{children}</li>,
               strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
               em: ({ children }) => <em className="italic text-muted-foreground">{children}</em>,
             }}
           >
-            {displayedSummary}
+            {summary}
           </ReactMarkdown>
         </div>
       )}
