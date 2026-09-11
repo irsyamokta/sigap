@@ -10,4 +10,6 @@
  */
 export type * from './models/User.ts'
 export type * from './models/Session.ts'
+export type * from './models/NakesSubmission.ts'
+export type * from './models/NakesSubmissionItem.ts'
 export type * from './commonInputTypes.ts'

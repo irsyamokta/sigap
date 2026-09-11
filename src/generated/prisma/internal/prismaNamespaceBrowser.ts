@@ -52,7 +52,9 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
-  Session: 'Session'
+  Session: 'Session',
+  NakesSubmission: 'NakesSubmission',
+  NakesSubmissionItem: 'NakesSubmissionItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -91,6 +93,27 @@ export const SessionScalarFieldEnum = {
 } as const
 
 export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
+
+
+export const NakesSubmissionScalarFieldEnum = {
+  id: 'id',
+  puskesmasCode: 'puskesmasCode',
+  submittedById: 'submittedById',
+  submittedAt: 'submittedAt'
+} as const
+
+export type NakesSubmissionScalarFieldEnum = (typeof NakesSubmissionScalarFieldEnum)[keyof typeof NakesSubmissionScalarFieldEnum]
+
+
+export const NakesSubmissionItemScalarFieldEnum = {
+  id: 'id',
+  submissionId: 'submissionId',
+  jenisNakes: 'jenisNakes',
+  kebutuhan: 'kebutuhan',
+  tersedia: 'tersedia'
+} as const
+
+export type NakesSubmissionItemScalarFieldEnum = (typeof NakesSubmissionItemScalarFieldEnum)[keyof typeof NakesSubmissionItemScalarFieldEnum]
 
 
 export const SortOrder = {

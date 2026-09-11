@@ -398,7 +398,9 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
-  Session: 'Session'
+  Session: 'Session',
+  NakesSubmission: 'NakesSubmission',
+  NakesSubmissionItem: 'NakesSubmissionItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -414,7 +416,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session"
+    modelProps: "user" | "session" | "nakesSubmission" | "nakesSubmissionItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -566,6 +568,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    NakesSubmission: {
+      payload: Prisma.$NakesSubmissionPayload<ExtArgs>
+      fields: Prisma.NakesSubmissionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NakesSubmissionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NakesSubmissionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>
+        }
+        findFirst: {
+          args: Prisma.NakesSubmissionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NakesSubmissionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>
+        }
+        findMany: {
+          args: Prisma.NakesSubmissionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>[]
+        }
+        create: {
+          args: Prisma.NakesSubmissionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>
+        }
+        createMany: {
+          args: Prisma.NakesSubmissionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NakesSubmissionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>[]
+        }
+        delete: {
+          args: Prisma.NakesSubmissionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>
+        }
+        update: {
+          args: Prisma.NakesSubmissionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>
+        }
+        deleteMany: {
+          args: Prisma.NakesSubmissionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NakesSubmissionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NakesSubmissionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>[]
+        }
+        upsert: {
+          args: Prisma.NakesSubmissionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionPayload>
+        }
+        aggregate: {
+          args: Prisma.NakesSubmissionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNakesSubmission>
+        }
+        groupBy: {
+          args: Prisma.NakesSubmissionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NakesSubmissionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NakesSubmissionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NakesSubmissionCountAggregateOutputType> | number
+        }
+      }
+    }
+    NakesSubmissionItem: {
+      payload: Prisma.$NakesSubmissionItemPayload<ExtArgs>
+      fields: Prisma.NakesSubmissionItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NakesSubmissionItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NakesSubmissionItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>
+        }
+        findFirst: {
+          args: Prisma.NakesSubmissionItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NakesSubmissionItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>
+        }
+        findMany: {
+          args: Prisma.NakesSubmissionItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>[]
+        }
+        create: {
+          args: Prisma.NakesSubmissionItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>
+        }
+        createMany: {
+          args: Prisma.NakesSubmissionItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NakesSubmissionItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>[]
+        }
+        delete: {
+          args: Prisma.NakesSubmissionItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>
+        }
+        update: {
+          args: Prisma.NakesSubmissionItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.NakesSubmissionItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NakesSubmissionItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NakesSubmissionItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.NakesSubmissionItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NakesSubmissionItemPayload>
+        }
+        aggregate: {
+          args: Prisma.NakesSubmissionItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNakesSubmissionItem>
+        }
+        groupBy: {
+          args: Prisma.NakesSubmissionItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NakesSubmissionItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NakesSubmissionItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NakesSubmissionItemCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -625,6 +775,27 @@ export const SessionScalarFieldEnum = {
 } as const
 
 export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
+
+
+export const NakesSubmissionScalarFieldEnum = {
+  id: 'id',
+  puskesmasCode: 'puskesmasCode',
+  submittedById: 'submittedById',
+  submittedAt: 'submittedAt'
+} as const
+
+export type NakesSubmissionScalarFieldEnum = (typeof NakesSubmissionScalarFieldEnum)[keyof typeof NakesSubmissionScalarFieldEnum]
+
+
+export const NakesSubmissionItemScalarFieldEnum = {
+  id: 'id',
+  submissionId: 'submissionId',
+  jenisNakes: 'jenisNakes',
+  kebutuhan: 'kebutuhan',
+  tersedia: 'tersedia'
+} as const
+
+export type NakesSubmissionItemScalarFieldEnum = (typeof NakesSubmissionItemScalarFieldEnum)[keyof typeof NakesSubmissionItemScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -710,6 +881,20 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -865,6 +1050,8 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   session?: Prisma.SessionOmit
+  nakesSubmission?: Prisma.NakesSubmissionOmit
+  nakesSubmissionItem?: Prisma.NakesSubmissionItemOmit
 }
 
 /* Types for Logging */

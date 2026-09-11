@@ -18,14 +18,15 @@ enum Role {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String
-  role          Role      @default(PUSKESMAS)
-  puskesmasCode String?   
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
+  id              String            @id @default(cuid())
+  email           String            @unique
+  passwordHash    String
+  role            Role              @default(PUSKESMAS)
+  puskesmasCode   String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  sessions        Session[]
+  nakesSubmissions NakesSubmission[]
 }
 
 model Session {
@@ -33,4 +34,29 @@ model Session {
   userId    String
   expiresAt DateTime
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Pengajuan kebutuhan nakes dari Puskesmas (atau entri oleh Dinkes atas nama Puskesmas).
+/// Setiap upload menghasilkan satu record NakesSubmission baru; record lama dari puskesmas
+/// yang sama tetap tersimpan sebagai riwayat. Dashboard selalu membaca submission terbaru
+/// per puskesmasCode.
+model NakesSubmission {
+  id            String                @id @default(cuid())
+  puskesmasCode String                // Kode puskesmas target (misal: "purwokerto_barat")
+  submittedById String                // User yang melakukan submit
+  submittedBy   User                  @relation(fields: [submittedById], references: [id])
+  submittedAt   DateTime              @default(now())
+  items         NakesSubmissionItem[]
+
+  @@index([puskesmasCode, submittedAt])
+}
+
+/// Rincian satu jenis nakes dalam satu pengajuan.
+model NakesSubmissionItem {
+  id           String          @id @default(cuid())
+  submissionId String
+  submission   NakesSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  jenisNakes   String          // Nama profesi, mis. "Dokter", "Perawat"
+  kebutuhan    Int             // Jumlah yang dibutuhkan (diajukan oleh Puskesmas)
+  tersedia     Int             @default(0) // Jumlah yang sudah tersedia saat pengajuan
 }

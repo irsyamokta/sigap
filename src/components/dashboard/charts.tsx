@@ -158,8 +158,15 @@ export function StandarTenagaChart({
 export function RasioDonut({ value }: { value: number }) {
   const data = [
     { name: "Terpenuhi", value },
-    { name: "Kurang", value: 100 - value },
+    { name: "Kurang", value: Math.max(0, 100 - value) },
   ];
+
+  const statusInfo = value >= 80
+    ? { label: "Cukup", color: "var(--color-primary)", textColor: "text-primary" }
+    : value >= 50
+    ? { label: "Sedang", color: "var(--color-chart-3)", textColor: "text-amber-600 dark:text-amber-400" }
+    : { label: "Kritis", color: "var(--color-destructive)", textColor: "text-destructive" };
+
   return (
     <div className="relative mx-auto w-full max-w-[210px]">
       <ResponsiveContainer width="100%" height={210}>
@@ -174,14 +181,14 @@ export function RasioDonut({ value }: { value: number }) {
             paddingAngle={2}
             stroke="none"
           >
-            <Cell fill="var(--color-primary)" />
+            <Cell fill={statusInfo.color} />
             <Cell fill="var(--color-muted)" />
           </Pie>
         </PieChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold text-primary">{value}%</span>
-        <span className="text-xs text-muted-foreground">Cukup</span>
+        <span className={`text-3xl font-bold ${statusInfo.textColor}`}>{value}%</span>
+        <span className="text-xs font-medium text-muted-foreground">{statusInfo.label}</span>
       </div>
     </div>
   );

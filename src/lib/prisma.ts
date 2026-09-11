@@ -4,7 +4,6 @@ import pkg from 'pg';
 
 const { Pool } = pkg;
 
-// Maintain connection pools and clients globally in development to prevent memory and connection leaks.
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   pgPool?: pkg.Pool;
@@ -20,7 +19,7 @@ if (process.env.NODE_ENV === "production") {
   if (!globalForPrisma.pgPool) {
     globalForPrisma.pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
   }
-  if (!globalForPrisma.prisma) {
+  if (!globalForPrisma.prisma || !("nakesSubmission" in globalForPrisma.prisma)) {
     const adapter = new PrismaPg(globalForPrisma.pgPool);
     globalForPrisma.prisma = new PrismaClient({ adapter });
   }

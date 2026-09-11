@@ -27,3 +27,16 @@ export type User = Prisma.UserModel
  * 
  */
 export type Session = Prisma.SessionModel
+/**
+ * Model NakesSubmission
+ * Pengajuan kebutuhan nakes dari Puskesmas (atau entri oleh Dinkes atas nama Puskesmas).
+ * Setiap upload menghasilkan satu record NakesSubmission baru; record lama dari puskesmas
+ * yang sama tetap tersimpan sebagai riwayat. Dashboard selalu membaca submission terbaru
+ * per puskesmasCode.
+ */
+export type NakesSubmission = Prisma.NakesSubmissionModel
+/**
+ * Model NakesSubmissionItem
+ * Rincian satu jenis nakes dalam satu pengajuan.
+ */
+export type NakesSubmissionItem = Prisma.NakesSubmissionItemModel

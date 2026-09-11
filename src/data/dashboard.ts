@@ -1,5 +1,6 @@
 import { format, parseISO, startOfWeek, startOfMonth, isWithinInterval, subDays } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { getNakesSubmissionsFn, buildNakesRatiosFromSubmissions, getMergedWorkforceData, type PuskesmasWorkforceData } from "@/lib/api/workforce";
 
 export type PuskesmasId = "all" | "purwokerto_barat" | "patikraja" | "sokaraja_1" | "kembaran_1";
 
@@ -13,58 +14,23 @@ export const puskesmasList: { id: PuskesmasId; nama: string }[] = [
 
 const clampPct = (n: number) => Math.max(3, Math.min(100, Math.round(n)));
 
-// Static workforce data per puskesmas (9 Standar Tenaga Kesehatan Kemenkes)
-const workforceData: Record<string, { nama: string, tersedia: number, kebutuhan: number }[]> = {
-  purwokerto_barat: [
-    { nama: "Dokter", tersedia: 6, kebutuhan: 8 },
-    { nama: "Dokter Gigi", tersedia: 2, kebutuhan: 2 },
-    { nama: "Perawat", tersedia: 20, kebutuhan: 22 },
-    { nama: "Bidan", tersedia: 5, kebutuhan: 6 },
-    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 3, kebutuhan: 4 },
-    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 2, kebutuhan: 3 },
-    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 2, kebutuhan: 2 },
-    { nama: "Tenaga Kefarmasian", tersedia: 3, kebutuhan: 4 },
-  ],
-  patikraja: [
-    { nama: "Dokter", tersedia: 3, kebutuhan: 4 },
-    { nama: "Dokter Gigi", tersedia: 1, kebutuhan: 1 },
-    { nama: "Perawat", tersedia: 12, kebutuhan: 14 },
-    { nama: "Bidan", tersedia: 3, kebutuhan: 4 },
-    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 2, kebutuhan: 2 },
-    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Tenaga Kefarmasian", tersedia: 2, kebutuhan: 2 },
-  ],
-  sokaraja_1: [
-    { nama: "Dokter", tersedia: 5, kebutuhan: 5 },
-    { nama: "Dokter Gigi", tersedia: 1, kebutuhan: 2 },
-    { nama: "Perawat", tersedia: 15, kebutuhan: 18 },
-    { nama: "Bidan", tersedia: 4, kebutuhan: 4 },
-    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 3, kebutuhan: 3 },
-    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 2, kebutuhan: 2 },
-    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Tenaga Kefarmasian", tersedia: 2, kebutuhan: 3 },
-  ],
-  kembaran_1: [
-    { nama: "Dokter", tersedia: 4, kebutuhan: 5 },
-    { nama: "Dokter Gigi", tersedia: 2, kebutuhan: 2 },
-    { nama: "Perawat", tersedia: 11, kebutuhan: 14 },
-    { nama: "Bidan", tersedia: 2, kebutuhan: 3 },
-    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 2, kebutuhan: 3 },
-    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 1, kebutuhan: 2 },
-    { nama: "Tenaga Kefarmasian", tersedia: 2, kebutuhan: 3 },
-  ]
-};
-
 export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endDate: Date) {
   // Fetch the mock API JSON file
   const response = await fetch('/data/dinkominfo-api.json');
   const allData: any[] = await response.json();
+
+  // Ambil data pengajuan nakes terbaru dari database (single source of truth)
+  // Hasilnya kosong [] jika belum ada pengajuan dari puskesmas manapun
+  let activeSubmissions: PuskesmasWorkforceData[] = [];
+  try {
+    activeSubmissions = await getNakesSubmissionsFn({ data: { puskesmasCode: pId } });
+  } catch {
+    // Jika server fn gagal (mis. user belum login), biarkan kosong
+    activeSubmissions = [];
+  }
+
+  // Tabel rasio: hanya muncul jika ada pengajuan dari puskesmas terkait
+  const nakesRatios = await buildNakesRatiosFromSubmissions(activeSubmissions, pId);
 
   // Filter by date range and puskesmas
   const filtered = allData.filter(d => {
@@ -140,36 +106,31 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
     t.kapasitas += d.rawatInap.kapasitas;
     t.days += 1;
 
-    // EWS is always weekly for the line chart, regardless of global grouping
-    const ewsStart = startOfWeek(dDate, { weekStartsOn: 1 });
-    // Use ISO string as the internal key so JS Date can sort/compare correctly
-    const ewsIsoKey = format(ewsStart, "yyyy-MM-dd");
-    const ewsLabel = format(ewsStart, "dd MMM yy", { locale: idLocale });
+    const ewsIsoKey = format(startOfWeek(dDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+    const ewsLabel = `Minggu ${format(startOfWeek(dDate, { weekStartsOn: 1 }), "dd MMM", { locale: idLocale })}`;
+
     if (!ewsMap.has(ewsIsoKey)) {
-      ewsMap.set(ewsIsoKey, { dbd: 0, diare: 0, ispa: 0, label: ewsLabel });
+      ewsMap.set(ewsIsoKey, { label: ewsLabel, dbd: 0, diare: 0, ispa: 0 });
     }
     const e = ewsMap.get(ewsIsoKey)!;
     e.dbd += d.penyakit.DBD ?? 0;
     e.diare += d.penyakit.Diare ?? 0;
     e.ispa += d.penyakit.ISPA ?? 0;
 
-    // Daily visit tracking (always per calendar day, for kunjunganHarian chart)
     const pid = d.puskesmasId as string;
-    const dayIsoKey = d.date; // already in "yyyy-MM-dd" format
+    const dayIsoKey = d.date;
     const dayLabel = format(dDate, "dd MMM", { locale: idLocale });
     if (!dailyMap.has(dayIsoKey)) {
       dailyMap.set(dayIsoKey, { label: dayLabel, total: 0 });
     }
     dailyMap.get(dayIsoKey)!.total += d.kunjungan.total;
 
-    // Per-puskesmas daily visit tracking for multi-line chart
     if (!perPuskesmasDailyMap.has(pid)) {
       perPuskesmasDailyMap.set(pid, new Map());
     }
     const pDailyMap = perPuskesmasDailyMap.get(pid)!;
     pDailyMap.set(dayIsoKey, (pDailyMap.get(dayIsoKey) ?? 0) + d.kunjungan.total);
 
-    // Per-puskesmas EWS tracking (keyed by ISO date for reliable lookup)
     if (!perPuskesmasEwsMap.has(pid)) {
       perPuskesmasEwsMap.set(pid, new Map());
     }
@@ -201,7 +162,6 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
   const perbandinganKapasitas = [];
   const okupansiRuang = [];
 
-  // Sort by ISO key (chronological), use label for display
   const sortedTrenEntries = Array.from(trenMap.entries()).sort(([a], [b]) => a.localeCompare(b));
 
   for (const [, data] of sortedTrenEntries) {
@@ -214,31 +174,10 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
     okupansiRuang.push({ bulan: data.label, okupansi: avgKapasitas ? clampPct((avgPasien / avgKapasitas) * 100) : 0 });
   }
 
-  // Finalize Workforce (9 Standar Tenaga Kesehatan Kemenkes)
-  const standarTenaga: { nama: string, tersedia: number, kebutuhan: number }[] = [
-    { nama: "Dokter", tersedia: 0, kebutuhan: 0 },
-    { nama: "Dokter Gigi", tersedia: 0, kebutuhan: 0 },
-    { nama: "Perawat", tersedia: 0, kebutuhan: 0 },
-    { nama: "Bidan", tersedia: 0, kebutuhan: 0 },
-    { nama: "Tenaga Kesehatan Masyarakat", tersedia: 0, kebutuhan: 0 },
-    { nama: "Tenaga Kesehatan Lingkungan (Sanitarian)", tersedia: 0, kebutuhan: 0 },
-    { nama: "Ahli Teknologi Laboratorium Medik (ATLM)", tersedia: 0, kebutuhan: 0 },
-    { nama: "Tenaga Gizi (Nutrisionis)", tersedia: 0, kebutuhan: 0 },
-    { nama: "Tenaga Kefarmasian", tersedia: 0, kebutuhan: 0 },
-  ];
+  // Bangun data tenaga kesehatan (gabungan baseline API + pengajuan DB jika ada)
+  const standarTenaga = getMergedWorkforceData(pId, activeSubmissions);
 
-  const targetPuskesmas = pId === "all" ? Object.keys(workforceData) : [pId];
-  for (const p of targetPuskesmas) {
-    const wf = workforceData[p];
-    if (wf) {
-      for (let i = 0; i < standarTenaga.length; i++) {
-        standarTenaga[i].tersedia += wf[i].tersedia;
-        standarTenaga[i].kebutuhan += wf[i].kebutuhan;
-      }
-    }
-  }
-
-  const tenagaPerProfesi = standarTenaga.map(s => ({ nama: s.nama, jumlah: s.tersedia }));
+  const tenagaPerProfesi = standarTenaga.map((s) => ({ nama: s.nama, jumlah: s.tersedia }));
   const totalTenaga = standarTenaga.reduce((a, b) => a + b.tersedia, 0);
   const totalKebutuhan = standarTenaga.reduce((a, b) => a + b.kebutuhan, 0);
   const rasio = totalKebutuhan ? clampPct((totalTenaga / totalKebutuhan) * 100) : 0;
@@ -247,7 +186,7 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
   const analisisPrioritas = puskesmasList
     .filter((item) => item.id !== "all")
     .map((item) => {
-      const wf = workforceData[item.id] || [];
+      const wf = getMergedWorkforceData(item.id as PuskesmasId, activeSubmissions);
       const tersedia = wf.reduce((sum, n) => sum + n.tersedia, 0);
       const kebutuhan = wf.reduce((sum, n) => sum + n.kebutuhan, 0);
       const defisit = Math.max(0, kebutuhan - tersedia);
@@ -289,8 +228,6 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
       };
 
   // EWS — Threshold disesuaikan agar realistis dengan skala data mock:
-  // Combined (all):  DBD max ~34/mgg  → siaga 28 | Diare max ~66 → siaga 55 | ISPA max ~154 → siaga 120
-  // Per-puskesmas:   DBD max ~21/mgg  → siaga 17 | Diare max ~47 → siaga 38 | ISPA max ~107 → siaga  85
   const ewsThresholds = { 
     dbd:   pId === "all" ? 28  : 17, 
     diare: pId === "all" ? 55  : 38, 
@@ -466,7 +403,8 @@ export async function fetchDashboardData(pId: PuskesmasId, startDate: Date, endD
       `Rasio kecukupan tenaga kesehatan saat ini ${rasio}%.`
     ],
     pId,
-    puskesmasAlerts
+    puskesmasAlerts,
+    nakesRatios,
   };
 }
 

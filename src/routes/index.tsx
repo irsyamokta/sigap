@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Activity, Minus, TrendingDown, TrendingUp, UserCheck, Users } from "lucide-react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -23,11 +23,13 @@ import {
 import { fetchDashboardData, puskesmasList, type PuskesmasId } from "@/data/dashboard";
 import { generateSummary } from "@/lib/ai.functions";
 import { getAuthUserFn } from "@/lib/auth";
+import { NakesUploadDrawer } from "@/components/dashboard/nakes-upload-drawer";
+import { NakesRatioTable } from "@/components/dashboard/nakes-ratio-table";
 const nf = new Intl.NumberFormat("id-ID");
 
 function getDefaultRange(): DateRange {
  
-  const latestDataDate = new Date(2026, 7, 14); // 14 Agustus 2026
+  const latestDataDate = new Date(2026, 7, 14);
   const today = new Date();
   const refDate = today > latestDataDate ? latestDataDate : today;
   return {
@@ -73,6 +75,7 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const { user } = Route.useRouteContext();
   const navigate = Route.useNavigate();
+  const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     navigate({ to: "/login" });
@@ -97,6 +100,10 @@ function Dashboard() {
     },
     placeholderData: keepPreviousData,
   });
+
+  const handleNakesUpload = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -147,7 +154,6 @@ function Dashboard() {
     });
   }
 
-  // Hanya tampilkan full-screen loading jika data belum pernah dimuat (first load)
   if (isLoading && !d) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center space-y-4 bg-background">
@@ -165,7 +171,6 @@ function Dashboard() {
     );
   }
 
-  // After all guards, `d` is guaranteed to be defined from here on.
   if (!d) return null;
 
   return (
@@ -361,10 +366,21 @@ function Dashboard() {
               <p className="text-center text-[11px] text-muted-foreground mt-2">dari standar 100%</p>
             </Panel>
           </div>
+
+          {/* Nakes Ratio per Population Table */}
+          <div className="mt-5 border-t border-border/60 pt-5">
+            <NakesRatioTable items={d.nakesRatios || []} />
+          </div>
         </Section>
 
-
       </main>
+
+      {/* Right-Side Edge Drawer Component for Excel Upload */}
+      <NakesUploadDrawer
+        userRole={user.role as "DINKES" | "PUSKESMAS"}
+        selectedPuskesmasId={puskesmas}
+        onProcessUpload={handleNakesUpload}
+      />
     </div>
   );
 }
