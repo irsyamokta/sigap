@@ -10,6 +10,8 @@ export interface KecamatanPopulation {
 
 export interface NakesRatioItem {
   id: string;
+  submissionItemId?: string;
+  puskesmasCode?: string;
   namaKecamatan: string;
   puskesmasNama: string;
   jenisNakes: string;

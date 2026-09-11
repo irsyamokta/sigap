@@ -9,6 +9,7 @@ import type { PuskesmasId } from "@/data/dashboard";
 // ─── Tipe Data ────────────────────────────────────────────────────────────────
 
 export interface WorkforceItem {
+  id?: string;
   jenisNakes: string;
   kebutuhan: number;
   tersedia: number;
@@ -22,6 +23,52 @@ export interface PuskesmasWorkforceData {
 }
 
 // ─── Server Functions ─────────────────────────────────────────────────────────
+
+/**
+ * Menghapus pengajuan item nakes dari database.
+ */
+export const deleteNakesItemsFn = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      itemIds: z.array(z.string()),
+      targets: z
+        .array(
+          z.object({
+            puskesmasCode: z.string(),
+            jenisNakes: z.string(),
+          })
+        )
+        .optional(),
+    })
+  )
+  .handler(async ({ data }) => {
+    let deletedCount = 0;
+
+    if (data.itemIds.length > 0) {
+      const res = await prisma.nakesSubmissionItem.deleteMany({
+        where: {
+          id: { in: data.itemIds },
+        },
+      });
+      deletedCount += res.count;
+    }
+
+    if (data.targets && data.targets.length > 0) {
+      for (const t of data.targets) {
+        const res = await prisma.nakesSubmissionItem.deleteMany({
+          where: {
+            jenisNakes: { equals: t.jenisNakes, mode: "insensitive" },
+            submission: {
+              puskesmasCode: t.puskesmasCode,
+            },
+          },
+        });
+        deletedCount += res.count;
+      }
+    }
+
+    return { success: true, deletedCount };
+  });
 
 /**
  * Menyimpan pengajuan kebutuhan nakes ke database.
@@ -206,6 +253,7 @@ export const getNakesSubmissionsFn = createServerFn({ method: "GET" })
           submittedAt: latest.submittedAt.toISOString(),
           submittedBy: latest.submittedBy.email,
           items: latest.items.map((item) => ({
+            id: item.id,
             jenisNakes: item.jenisNakes,
             kebutuhan: item.kebutuhan,
             tersedia: item.tersedia,
@@ -348,7 +396,9 @@ export async function buildNakesRatiosFromSubmissions(
       if (item.kebutuhan <= 0 && item.tersedia <= 0) continue;
       const ratio = calculateNakesRatio(item.kebutuhan, pop.jumlahPenduduk);
       result.push({
-        id: `${pop.id}_${item.jenisNakes.toLowerCase().replace(/\s+/g, "_")}`,
+        id: item.id || `${pop.id}_${item.jenisNakes.toLowerCase().replace(/\s+/g, "_")}`,
+        submissionItemId: item.id,
+        puskesmasCode: sub.puskesmasCode,
         namaKecamatan: pop.namaKecamatan,
         puskesmasNama: pop.puskesmasNama,
         jenisNakes: item.jenisNakes,

@@ -9,13 +9,13 @@ import {
   Search,
   X,
   Trash2,
-  RotateCcw,
   ChevronLeft,
   ChevronRight,
   ListFilter,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { NakesRatioItem } from "@/lib/api/population";
+import { deleteNakesItemsFn } from "@/lib/api/workforce";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -40,9 +40,10 @@ interface NakesRatioTableProps {
   items: NakesRatioItem[];
   lastUpdated?: Date;
   onReset?: () => void;
+  onDeleteItems?: (itemsToDelete: NakesRatioItem[]) => Promise<void>;
 }
 
-export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTableProps) {
+export function NakesRatioTable({ items, lastUpdated, onDeleteItems }: NakesRatioTableProps) {
   const [localItems, setLocalItems] = useState<NakesRatioItem[]>(items);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
@@ -53,6 +54,7 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const nf = new Intl.NumberFormat("id-ID");
 
@@ -126,21 +128,61 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
     setSelectedIds(next);
   };
 
-  // Delete Handlers
-  const handleDeleteSelected = () => {
-    const count = selectedIds.size;
+  // Delete Handlers with Database Synchronization
+  const handleDeleteSelected = async () => {
+    const selectedItems = localItems.filter((item) => selectedIds.has(item.id));
+    const count = selectedItems.length;
     if (count === 0) return;
+
+    setIsDeleting(true);
+    // Instant UI feedback
     setLocalItems((prev) => prev.filter((item) => !selectedIds.has(item.id)));
     setSelectedIds(new Set());
     setConfirmDialogOpen(false);
-    toast.success(`Berhasil menghapus ${count} data terpilih`);
+
+    try {
+      if (onDeleteItems) {
+        await onDeleteItems(selectedItems);
+      } else {
+        const itemIds = selectedItems.map((i) => i.submissionItemId || i.id).filter(Boolean);
+        const targets = selectedItems
+          .filter((i) => i.puskesmasCode && i.jenisNakes)
+          .map((i) => ({ puskesmasCode: i.puskesmasCode!, jenisNakes: i.jenisNakes }));
+
+        await deleteNakesItemsFn({ data: { itemIds, targets } });
+      }
+      toast.success(`Berhasil menghapus ${count} data terpilih dari database`);
+    } catch (err: any) {
+      toast.error(`Gagal menghapus data dari database: ${err?.message || err}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  const handleResetData = () => {
-    setLocalItems(items);
-    setSelectedIds(new Set());
-    if (onReset) onReset();
-    toast.info("Data berhasil dipulihkan ke versi awal");
+  const handleDeleteRow = async (item: NakesRatioItem) => {
+    setIsDeleting(true);
+    setLocalItems((prev) => prev.filter((i) => i.id !== item.id));
+    const next = new Set(selectedIds);
+    next.delete(item.id);
+    setSelectedIds(next);
+
+    try {
+      if (onDeleteItems) {
+        await onDeleteItems([item]);
+      } else {
+        const itemIds = item.submissionItemId ? [item.submissionItemId] : [item.id];
+        const targets =
+          item.puskesmasCode && item.jenisNakes
+            ? [{ puskesmasCode: item.puskesmasCode, jenisNakes: item.jenisNakes }]
+            : [];
+        await deleteNakesItemsFn({ data: { itemIds, targets } });
+      }
+      toast.success(`Data ${item.jenisNakes} (${item.namaKecamatan}) dihapus dari database`);
+    } catch (err: any) {
+      toast.error(`Gagal menghapus data: ${err?.message || err}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getRatioBadge = (ratio: number) => {
@@ -217,24 +259,12 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
           {selectedIds.size > 0 && (
             <button
               type="button"
+              disabled={isDeleting}
               onClick={() => setConfirmDialogOpen(true)}
-              className="inline-flex items-center gap-1.5 h-9.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 px-3 text-xs font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 h-9.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 px-3 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
             >
               <Trash2 className="size-3.5" />
               Hapus Terpilih ({selectedIds.size})
-            </button>
-          )}
-
-          {/* Restore Data Button */}
-          {localItems.length < items.length && (
-            <button
-              type="button"
-              onClick={handleResetData}
-              className="inline-flex items-center gap-1.5 h-9.5 rounded-xl border border-input bg-card hover:bg-accent/40 text-xs font-semibold transition-colors cursor-pointer"
-              title="Pulihkan data awal"
-            >
-              <RotateCcw className="size-3.5 text-muted-foreground" />
-              Pulihkan Data
             </button>
           )}
 
@@ -356,15 +386,10 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
                   <td className="px-3 py-3 text-center">
                     <button
                       type="button"
-                      onClick={() => {
-                        setLocalItems((prev) => prev.filter((i) => i.id !== item.id));
-                        const next = new Set(selectedIds);
-                        next.delete(item.id);
-                        setSelectedIds(next);
-                        toast.success(`Data ${item.jenisNakes} (${item.namaKecamatan}) dihapus`);
-                      }}
-                      className="rounded-lg p-1 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 transition-colors cursor-pointer"
-                      title="Hapus baris ini"
+                      disabled={isDeleting}
+                      onClick={() => handleDeleteRow(item)}
+                      className="rounded-lg p-1 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 transition-colors cursor-pointer disabled:opacity-50"
+                      title="Hapus baris ini dari database"
                     >
                       <Trash2 className="size-3.5" />
                     </button>
@@ -379,16 +404,6 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
                   <div className="flex flex-col items-center justify-center space-y-2">
                     <Calculator className="size-8 text-muted-foreground/60" />
                     <p className="text-sm font-semibold">Tidak ada data ditemukan</p>
-                    {localItems.length < items.length && (
-                      <button
-                        type="button"
-                        onClick={handleResetData}
-                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
-                      >
-                        <RotateCcw className="size-3.5" />
-                        Pulihkan Data Asli
-                      </button>
-                    )}
                   </div>
                 </td>
               </tr>
@@ -439,7 +454,7 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
         </div>
       )}
 
-      {/* Delete Confirmation Alert Dialog */}
+      {/* Delete Confirmation Alert Dialog - Pops up cleanly in center */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent className="rounded-2xl max-w-md">
           <AlertDialogHeader>
@@ -448,7 +463,7 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
               Hapus Data Terpilih?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed pt-1">
-              Apakah Anda yakin ingin menghapus {selectedIds.size} data terpilih dari tabel ini? Anda dapat mengembalikan data kapan saja dengan tombol Pulihkan Data.
+              Apakah Anda yakin ingin menghapus {selectedIds.size} data terpilih dari database? Data yang dihapus tidak dapat dikembalikan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4">
@@ -457,7 +472,7 @@ export function NakesRatioTable({ items, lastUpdated, onReset }: NakesRatioTable
               onClick={handleDeleteSelected}
               className="rounded-xl bg-rose-600 text-white hover:bg-rose-700 text-xs font-semibold cursor-pointer"
             >
-              Ya, Hapus Data
+              Ya, Hapus Permanen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

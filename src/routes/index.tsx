@@ -23,6 +23,7 @@ import {
 import { fetchDashboardData, puskesmasList, type PuskesmasId } from "@/data/dashboard";
 import { generateSummary } from "@/lib/ai.functions";
 import { getAuthUserFn } from "@/lib/auth";
+import { deleteNakesItemsFn } from "@/lib/api/workforce";
 import { NakesUploadDrawer } from "@/components/dashboard/nakes-upload-drawer";
 import { NakesRatioTable } from "@/components/dashboard/nakes-ratio-table";
 const nf = new Intl.NumberFormat("id-ID");
@@ -369,7 +370,17 @@ function Dashboard() {
 
           {/* Nakes Ratio per Population Table */}
           <div className="mt-5 border-t border-border/60 pt-5">
-            <NakesRatioTable items={d.nakesRatios || []} />
+            <NakesRatioTable
+              items={d.nakesRatios || []}
+              onDeleteItems={async (itemsToDelete) => {
+                const itemIds = itemsToDelete.map((i) => i.submissionItemId || i.id).filter(Boolean);
+                const targets = itemsToDelete
+                  .filter((i) => i.puskesmasCode && i.jenisNakes)
+                  .map((i) => ({ puskesmasCode: i.puskesmasCode!, jenisNakes: i.jenisNakes }));
+                await deleteNakesItemsFn({ data: { itemIds, targets } });
+                await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+              }}
+            />
           </div>
         </Section>
 
