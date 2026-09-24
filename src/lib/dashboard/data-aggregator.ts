@@ -12,11 +12,21 @@ export type { AggregatedDailyRow, AggregatedEwsRow, AggregateMaps };
 
 function classifyDisease(name: string): "dbd" | "diare" | "ispa" | null {
   const lower = name.toLowerCase();
-  if (lower.includes("dbd") || lower.includes("dengue")) return "dbd";
+  if (
+    lower.includes("dbd") ||
+    lower.includes("dengue") ||
+    lower.includes("haemorrhagic") ||
+    lower.includes("hemorrhagic") ||
+    lower.includes("berdarah")
+  )
+    return "dbd";
   if (
     lower.includes("diare") ||
     lower.includes("diarrhoea") ||
-    lower.includes("gastroenteritis")
+    lower.includes("diarrhea") ||
+    lower.includes("gastroenteritis") ||
+    lower.includes("disentri") ||
+    lower.includes("dehidrasi")
   )
     return "diare";
   if (
@@ -25,7 +35,14 @@ function classifyDisease(name: string): "dbd" | "diare" | "ispa" | null {
     lower.includes("respiratory") ||
     lower.includes("rhinitis") ||
     lower.includes("influenza") ||
-    lower.includes("cough")
+    lower.includes("cough") ||
+    lower.includes("batuk") ||
+    lower.includes("flu") ||
+    lower.includes("nasopharyngitis") ||
+    lower.includes("tonsilitis") ||
+    lower.includes("laringitis") ||
+    lower.includes("sinusitis") ||
+    lower.includes("faringitis")
   )
     return "ispa";
   return null;

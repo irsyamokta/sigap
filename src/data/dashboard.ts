@@ -66,11 +66,33 @@ export async function fetchDashboardData(
     allIntervalDays.length > 31 ? allIntervalDays.slice(-31) : allIntervalDays;
   const datesToFetch = selectedDays.map((d) => format(d, "yyyy-MM-dd"));
 
-  const [{ dailyData, nakesBaselines: apiNakesBaselines }, activeSubmissions] =
+  const currentPeriodDays =
+    Math.max(
+      1,
+      Math.round(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24),
+      ),
+    ) || 30;
+  const prevDaysToFetch = buildPrevDatesRange(
+    selectedDays,
+    startDate,
+    currentPeriodDays,
+  );
+
+  const allDatesToFetch = [...new Set([...datesToFetch, ...prevDaysToFetch])];
+  const currentDatesSet = new Set(datesToFetch);
+  const prevDatesSet = new Set(prevDaysToFetch);
+
+  const [{ dailyData: allDailyData, nakesBaselines: apiNakesBaselines }, activeSubmissions] =
     await Promise.all([
-      fetchSimpusData(pId, datesToFetch),
+      fetchSimpusData(pId, allDatesToFetch),
       fetchActiveSubmissions(pId),
     ]);
+
+  const dailyData = allDailyData.filter((d) => currentDatesSet.has(d.date));
+  const prevPasienSakit = allDailyData
+    .filter((d) => prevDatesSet.has(d.date))
+    .reduce((sum, d) => sum + d.kunjungan.sakit, 0);
 
   const nakesRatios = await buildNakesRatiosFromSubmissions(
     activeSubmissions,
@@ -124,35 +146,9 @@ export async function fetchDashboardData(
     puskesmasList,
   );
 
-  const currentPeriodDays =
-    Math.max(
-      1,
-      Math.round(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24),
-      ),
-    ) || 30;
-  const prevDaysToFetch = buildPrevDatesRange(
-    selectedDays,
-    startDate,
-    currentPeriodDays,
-  );
-
-  let prevPasienSakit = 0;
-  try {
-    const prevRes = await fetchSimpusDashboardDataFn({
-      data: { puskesmasId: pId, dates: prevDaysToFetch },
-    });
-    prevPasienSakit = prevRes.dailyData.reduce(
-      (sum, d) => sum + d.kunjungan.sakit,
-      0,
-    );
-  } catch {
-    prevPasienSakit = Math.round(pasienSakit * 0.95);
-  }
-
   const { trenPenyakit, trenPenyakitHint } = computeTrendPenyakit(
     pasienSakit,
-    dailyData.length,
+    datesToFetch.length,
     startDate,
     endDate,
     prevPasienSakit,
