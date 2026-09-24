@@ -1,5 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
-import { setCookie, getCookie, deleteCookie } from "@tanstack/react-start/server";
+import {
+  setCookie,
+  getCookie,
+  deleteCookie,
+} from "@tanstack/react-start/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
@@ -12,7 +16,7 @@ export const loginFn = createServerFn({ method: "POST" })
     z.object({
       email: z.string().email("Format email tidak valid"),
       password: z.string().min(1, "Password tidak boleh kosong"),
-    })
+    }),
   )
   .handler(async ({ data }) => {
     const user = await prisma.user.findUnique({
@@ -23,7 +27,10 @@ export const loginFn = createServerFn({ method: "POST" })
       throw new Error("Email atau password salah");
     }
 
-    const isValidPassword = await bcrypt.compare(data.password, user.passwordHash);
+    const isValidPassword = await bcrypt.compare(
+      data.password,
+      user.passwordHash,
+    );
     if (!isValidPassword) {
       throw new Error("Email atau password salah");
     }
@@ -53,7 +60,7 @@ export const loginFn = createServerFn({ method: "POST" })
 
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
   const sessionId = getCookie(SESSION_COOKIE_NAME);
-  
+
   if (sessionId) {
     await prisma.session.deleteMany({
       where: { id: sessionId },
@@ -64,36 +71,38 @@ export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
   return { success: true };
 });
 
-export const getAuthUserFn = createServerFn({ method: "GET" }).handler(async () => {
-  const sessionId = getCookie(SESSION_COOKIE_NAME);
-  
-  if (!sessionId) {
-    return null;
-  }
+export const getAuthUserFn = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const sessionId = getCookie(SESSION_COOKIE_NAME);
 
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          puskesmasCode: true,
+    if (!sessionId) {
+      return null;
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            puskesmasCode: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!session) {
-    return null;
-  }
+    if (!session) {
+      return null;
+    }
 
-  // Remove session if expired
-  if (session.expiresAt.getTime() < Date.now()) {
-    await prisma.session.delete({ where: { id: session.id } });
-    return null;
-  }
+    // Remove session if expired
+    if (session.expiresAt.getTime() < Date.now()) {
+      await prisma.session.delete({ where: { id: session.id } });
+      return null;
+    }
 
-  return session.user;
-});
+    return session.user;
+  },
+);

@@ -64,15 +64,19 @@ ${data.ringkasan}`;
                 maxOutputTokens: 4096,
               },
             }),
-          }
+          },
         );
 
         if (response.status === 429) {
-          lastError = "Terlalu banyak permintaan. Coba lagi beberapa saat lagi.";
+          lastError =
+            "Terlalu banyak permintaan. Coba lagi beberapa saat lagi.";
           continue;
         }
         if (response.status === 402) {
-          return { error: "Kredit AI habis. Silakan tambahkan kredit di workspace Anda." };
+          return {
+            error:
+              "Kredit AI habis. Silakan tambahkan kredit di workspace Anda.",
+          };
         }
         if (!response.ok) {
           const errBody = await response.text();
@@ -81,7 +85,10 @@ ${data.ringkasan}`;
         }
 
         const json = (await response.json()) as {
-          candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
+          candidates?: {
+            content?: { parts?: { text?: string }[] };
+            finishReason?: string;
+          }[];
         };
 
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
@@ -93,5 +100,7 @@ ${data.ringkasan}`;
       }
     }
 
-    return { error: lastError || "Gagal membuat ringkasan, silakan coba lagi." };
+    return {
+      error: lastError || "Gagal membuat ringkasan, silakan coba lagi.",
+    };
   });

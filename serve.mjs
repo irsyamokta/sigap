@@ -8,30 +8,15 @@ const { default: handler } = await import("./dist/server/server.js");
 const app = new Hono();
 
 // Serve static assets from dist/client
-app.use(
-  "/assets/*",
-  serveStatic({ root: "./dist/client" }),
-);
+app.use("/assets/*", serveStatic({ root: "./dist/client" }));
 
-app.use(
-  "/data/*",
-  serveStatic({ root: "./dist/client" }),
-);
+app.use("/data/*", serveStatic({ root: "./dist/client" }));
 
-app.use(
-  "/favicon.png",
-  serveStatic({ root: "./dist/client" }),
-);
+app.use("/favicon.png", serveStatic({ root: "./dist/client" }));
 
-app.use(
-  "/robots.txt",
-  serveStatic({ root: "./dist/client" }),
-);
+app.use("/robots.txt", serveStatic({ root: "./dist/client" }));
 
-app.use(
-  "/login-illustration.jpg",
-  serveStatic({ root: "./dist/client" }),
-);
+app.use("/login-illustration.jpg", serveStatic({ root: "./dist/client" }));
 
 // All other requests go to the SSR handler
 app.all("*", async (c) => {

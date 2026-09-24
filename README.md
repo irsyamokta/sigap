@@ -6,15 +6,15 @@ Dashboard analitik data kesehatan puskesmas berbasis web. Menampilkan ringkasan 
 
 ## Tech Stack
 
-| Kategori | Teknologi |
-|---|---|
+| Kategori  | Teknologi                                                               |
+| --------- | ----------------------------------------------------------------------- |
 | Framework | [TanStack Start](https://tanstack.com/start) (SSR + file-based routing) |
-| UI | React 19, Tailwind CSS v4, shadcn/ui |
-| Chart | Recharts |
-| AI | Google Gemini API (`gemini-2.5-flash`) |
-| Date | date-fns, react-day-picker v9 |
-| Bundler | Vite 8 |
-| Language | TypeScript |
+| UI        | React 19, Tailwind CSS v4, shadcn/ui                                    |
+| Chart     | Recharts                                                                |
+| AI        | Google Gemini API (`gemini-2.5-flash`)                                  |
+| Date      | date-fns, react-day-picker v9                                           |
+| Bundler   | Vite 8                                                                  |
+| Language  | TypeScript                                                              |
 
 ---
 
@@ -67,14 +67,14 @@ Buka browser di `http://localhost:8080`.
 
 ## Scripts
 
-| Command | Deskripsi |
-|---|---|
-| `npm run dev` | Jalankan development server di port 8080 |
-| `npm run build` | Build production |
-| `npm run build:dev` | Build dengan mode development |
-| `npm run preview` | Preview hasil build |
-| `npm run lint` | Jalankan ESLint |
-| `npm run format` | Format kode dengan Prettier |
+| Command             | Deskripsi                                |
+| ------------------- | ---------------------------------------- |
+| `npm run dev`       | Jalankan development server di port 8080 |
+| `npm run build`     | Build production                         |
+| `npm run build:dev` | Build dengan mode development            |
+| `npm run preview`   | Preview hasil build                      |
+| `npm run lint`      | Jalankan ESLint                          |
+| `npm run format`    | Format kode dengan Prettier              |
 
 ---
 
@@ -137,9 +137,9 @@ sigap/
 
 ## Environment Variables
 
-| Variable | Deskripsi | Wajib |
-|---|---|---|
-| `GEMINI_API_KEY` | API key Google Gemini untuk fitur ringkasan AI | Ya |
+| Variable         | Deskripsi                                      | Wajib |
+| ---------------- | ---------------------------------------------- | ----- |
+| `GEMINI_API_KEY` | API key Google Gemini untuk fitur ringkasan AI | Ya    |
 
 ---
 

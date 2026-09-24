@@ -2,7 +2,8 @@
  * Generates a random alphanumeric CAPTCHA code with mixed casing
  */
 export const generateCaptchaCode = (length = 6): string => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let code = "";
   for (let i = 0; i < length; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -41,7 +42,13 @@ export const generateCaptchaImage = (code: string): string => {
   for (let i = 0; i < 40; i++) {
     ctx.fillStyle = `rgba(${Math.floor(Math.random() * 180)}, ${Math.floor(Math.random() * 180)}, ${Math.floor(Math.random() * 180)}, 0.4)`;
     ctx.beginPath();
-    ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1 + Math.random(), 0, Math.PI * 2);
+    ctx.arc(
+      Math.random() * canvas.width,
+      Math.random() * canvas.height,
+      1 + Math.random(),
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -53,15 +60,15 @@ export const generateCaptchaImage = (code: string): string => {
     const char = code[i];
     const x = 15 + i * 23 + Math.random() * 4;
     const y = 28 + (Math.random() * 10 - 5);
-    const angle = (Math.random() * 30 - 15) * Math.PI / 180; // random rotation -15 to 15 degrees
+    const angle = ((Math.random() * 30 - 15) * Math.PI) / 180; // random rotation -15 to 15 degrees
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
-    
+
     // Choose random fonts and styles for each character to make it anti-OCR
     ctx.font = `bold ${22 + Math.floor(Math.random() * 6)}px ${fontFamilies[Math.floor(Math.random() * fontFamilies.length)]}`;
-    
+
     // Dark-themed colors (so it stands out and is readable)
     ctx.fillStyle = `rgb(${Math.floor(Math.random() * 80)}, ${Math.floor(Math.random() * 80)}, ${Math.floor(Math.random() * 120)})`;
     ctx.fillText(char, 0, 0);

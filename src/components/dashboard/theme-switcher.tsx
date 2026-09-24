@@ -5,11 +5,27 @@ type ThemeKey = "cyan" | "sky" | "mint" | "coral" | "lavender";
 type Mode = "light" | "dark";
 
 const themes: { key: ThemeKey; label: string; gradient: string }[] = [
-  { key: "cyan",     label: "Cyan (Default)", gradient: "from-cyan-400 to-cyan-600" },
-  { key: "sky",      label: "Biru Langit",    gradient: "from-sky-400 to-blue-600" },
-  { key: "mint",     label: "Hijau Mint",     gradient: "from-emerald-400 to-teal-600" },
-  { key: "coral",    label: "Oranye Coral",   gradient: "from-orange-400 to-rose-500" },
-  { key: "lavender", label: "Ungu Lavender",  gradient: "from-violet-400 to-fuchsia-500" },
+  {
+    key: "cyan",
+    label: "Cyan (Default)",
+    gradient: "from-cyan-400 to-cyan-600",
+  },
+  { key: "sky", label: "Biru Langit", gradient: "from-sky-400 to-blue-600" },
+  {
+    key: "mint",
+    label: "Hijau Mint",
+    gradient: "from-emerald-400 to-teal-600",
+  },
+  {
+    key: "coral",
+    label: "Oranye Coral",
+    gradient: "from-orange-400 to-rose-500",
+  },
+  {
+    key: "lavender",
+    label: "Ungu Lavender",
+    gradient: "from-violet-400 to-fuchsia-500",
+  },
 ];
 
 export function ThemeSwitcher() {
@@ -20,8 +36,13 @@ export function ThemeSwitcher() {
 
   useEffect(() => {
     // Sync state from DOM values set by the blocking theme script
-    const savedTheme = localStorage.getItem("dashboard-theme") as ThemeKey | null;
-    const validTheme = savedTheme && themes.some((t) => t.key === savedTheme) ? savedTheme : "cyan";
+    const savedTheme = localStorage.getItem(
+      "dashboard-theme",
+    ) as ThemeKey | null;
+    const validTheme =
+      savedTheme && themes.some((t) => t.key === savedTheme)
+        ? savedTheme
+        : "cyan";
     setTheme(validTheme);
 
     const isDark = document.documentElement.classList.contains("dark");
@@ -30,7 +51,10 @@ export function ThemeSwitcher() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -57,7 +81,9 @@ export function ThemeSwitcher() {
       <div
         onClick={() => setOpen(false)}
         className={`fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          open
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
       />
 
@@ -73,13 +99,19 @@ export function ThemeSwitcher() {
           aria-label="Ganti tema warna"
           className="group flex items-center gap-2 rounded-tr-xl border-t border-r border-border bg-card px-3 py-2.5 text-primary shadow-[var(--shadow-soft)] transition-all hover:bg-accent active:scale-95"
         >
-          <Settings className={`size-4 shrink-0 transition-transform duration-500 ${open ? "rotate-90" : "rotate-0"}`} />
-          <span className="text-xs font-medium text-foreground group-hover:text-accent-foreground">Pengaturan</span>
+          <Settings
+            className={`size-4 shrink-0 transition-transform duration-500 ${open ? "rotate-90" : "rotate-0"}`}
+          />
+          <span className="text-xs font-medium text-foreground group-hover:text-accent-foreground">
+            Pengaturan
+          </span>
         </button>
 
         {/* Sidebar laci */}
         <div className="w-56 rounded-tr-2xl border-t border-r border-border bg-card p-4 shadow-[var(--shadow-soft)]">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Tema</p>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            Tema
+          </p>
           <div className="space-y-1">
             {themes.map((t) => (
               <button
@@ -93,13 +125,17 @@ export function ThemeSwitcher() {
                     : "text-foreground hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
-                <span className={`size-3.5 shrink-0 rounded-full bg-gradient-to-br ${t.gradient} ring-2 ring-white/60`} />
+                <span
+                  className={`size-3.5 shrink-0 rounded-full bg-gradient-to-br ${t.gradient} ring-2 ring-white/60`}
+                />
                 {t.label}
               </button>
             ))}
           </div>
 
-          <p className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Mode</p>
+          <p className="mt-4 mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            Mode
+          </p>
           <div
             onClick={() => switchMode(mode === "light" ? "dark" : "light")}
             className="relative flex h-9 w-full cursor-pointer items-center rounded-full border border-border bg-muted p-1"
@@ -109,10 +145,14 @@ export function ThemeSwitcher() {
                 mode === "dark" ? "left-[calc(50%+2px)]" : "left-1"
               }`}
             />
-            <div className={`relative z-10 flex flex-1 items-center justify-center transition-colors duration-300 ${mode === "light" ? "text-primary-foreground" : "text-muted-foreground"}`}>
+            <div
+              className={`relative z-10 flex flex-1 items-center justify-center transition-colors duration-300 ${mode === "light" ? "text-primary-foreground" : "text-muted-foreground"}`}
+            >
               <Sun className="size-4" />
             </div>
-            <div className={`relative z-10 flex flex-1 items-center justify-center transition-colors duration-300 ${mode === "dark" ? "text-primary-foreground" : "text-muted-foreground"}`}>
+            <div
+              className={`relative z-10 flex flex-1 items-center justify-center transition-colors duration-300 ${mode === "dark" ? "text-primary-foreground" : "text-muted-foreground"}`}
+            >
               <Moon className="size-4" />
             </div>
           </div>

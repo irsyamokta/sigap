@@ -1,24 +1,7 @@
-import type { PuskesmasId } from "@/data/dashboard";
+import type { PuskesmasId } from "@/types/dashboard";
+import type { KecamatanPopulation } from "@/types/population";
 
-export interface KecamatanPopulation {
-  id: string;
-  namaKecamatan: string;
-  puskesmasId: PuskesmasId;
-  puskesmasNama: string;
-  jumlahPenduduk: number;
-}
-
-export interface NakesRatioItem {
-  id: string;
-  submissionItemId?: string;
-  puskesmasCode?: string;
-  namaKecamatan: string;
-  puskesmasNama: string;
-  jenisNakes: string;
-  kebutuhan: number;
-  jumlahPenduduk: number;
-  ratio: number;
-}
+export type { KecamatanPopulation };
 
 const MOCK_POPULATION_DATA: KecamatanPopulation[] = [
   {
@@ -52,52 +35,28 @@ const MOCK_POPULATION_DATA: KecamatanPopulation[] = [
 ];
 
 /**
- * Service API-ready untuk mengambil data jumlah penduduk per kecamatan.
- * Saat API backend resmi tersedia, ganti implementasi mock ini dengan fetch/axios ke endpoint API.
+ * Service untuk mengambil data jumlah penduduk per kecamatan di Banyumas.
  */
-export async function fetchPopulationData(puskesmasId: PuskesmasId = "all"): Promise<KecamatanPopulation[]> {
-  // Simulasi network delay kecil layaknya API call sungguhan
-  await new Promise((resolve) => setTimeout(resolve, 150));
-
+export async function fetchPopulationData(
+  puskesmasId: PuskesmasId = "all",
+): Promise<KecamatanPopulation[]> {
   if (puskesmasId === "all") {
     return MOCK_POPULATION_DATA;
   }
-  return MOCK_POPULATION_DATA.filter((item) => item.puskesmasId === puskesmasId);
+  return MOCK_POPULATION_DATA.filter(
+    (item) => item.puskesmasId === puskesmasId,
+  );
 }
 
 /**
  * Rumus Perhitungan Ratio Nakes berdasarkan Jumlah Penduduk:
  * Ratio = (Jumlah Nakes Kebutuhan / Jumlah Penduduk) * 1.000
  */
-export function calculateNakesRatio(kebutuhan: number, jumlahPenduduk: number): number {
+export function calculateNakesRatio(
+  kebutuhan: number,
+  jumlahPenduduk: number,
+): number {
   if (!jumlahPenduduk || jumlahPenduduk <= 0) return 0;
   const ratio = (kebutuhan / jumlahPenduduk) * 1000;
   return Number(ratio.toFixed(2));
-}
-
-/**
- * Menghitung daftar ratio nakes per kecamatan dari data upload nakes & data penduduk
- */
-export function processNakesRatios(
-  nakesUploadList: { jenisNakes: string; kebutuhan: number }[],
-  populationList: KecamatanPopulation[]
-): NakesRatioItem[] {
-  const result: NakesRatioItem[] = [];
-
-  for (const pop of populationList) {
-    for (const nakes of nakesUploadList) {
-      const ratio = calculateNakesRatio(nakes.kebutuhan, pop.jumlahPenduduk);
-      result.push({
-        id: `${pop.id}_${nakes.jenisNakes.toLowerCase().replace(/\s+/g, "_")}`,
-        namaKecamatan: pop.namaKecamatan,
-        puskesmasNama: pop.puskesmasNama,
-        jenisNakes: nakes.jenisNakes,
-        kebutuhan: nakes.kebutuhan,
-        jumlahPenduduk: pop.jumlahPenduduk,
-        ratio,
-      });
-    }
-  }
-
-  return result;
 }

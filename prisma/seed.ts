@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client.js";
-import { PrismaPg } from '@prisma/adapter-pg';
-import pkg from 'pg';
+import { PrismaPg } from "@prisma/adapter-pg";
+import pkg from "pg";
 import bcrypt from "bcryptjs";
 
 const { Pool } = pkg;

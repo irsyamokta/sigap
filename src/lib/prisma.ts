@@ -1,6 +1,6 @@
 import { PrismaClient } from "../generated/prisma/client.js";
-import { PrismaPg } from '@prisma/adapter-pg';
-import pkg from 'pg';
+import { PrismaPg } from "@prisma/adapter-pg";
+import pkg from "pg";
 
 const { Pool } = pkg;
 
@@ -17,9 +17,14 @@ if (process.env.NODE_ENV === "production") {
   prisma = new PrismaClient({ adapter });
 } else {
   if (!globalForPrisma.pgPool) {
-    globalForPrisma.pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+    globalForPrisma.pgPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
   }
-  if (!globalForPrisma.prisma || !("nakesSubmission" in globalForPrisma.prisma)) {
+  if (
+    !globalForPrisma.prisma ||
+    !("nakesSubmission" in globalForPrisma.prisma)
+  ) {
     const adapter = new PrismaPg(globalForPrisma.pgPool);
     globalForPrisma.prisma = new PrismaClient({ adapter });
   }
