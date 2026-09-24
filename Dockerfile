@@ -17,9 +17,16 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
-# Embed API key ke dalam bundle saat build
+# Embed API key & SIMPUS credentials ke dalam bundle saat build
 ARG GEMINI_API_KEY
+ARG BASE_URL
+ARG CLIENT_ID
+ARG CLIENT_SECRET
+
 ENV GEMINI_API_KEY=$GEMINI_API_KEY
+ENV BASE_URL=$BASE_URL
+ENV CLIENT_ID=$CLIENT_ID
+ENV CLIENT_SECRET=$CLIENT_SECRET
 
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
