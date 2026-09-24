@@ -49,14 +49,63 @@ export const TARGET_PUSKESMAS_CODES: SupportedPuskesmasId[] = [
 let cachedToken: string | null = null;
 let cachedTokenExpiresAt: number = 0;
 
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+type StaticPuskesmasInfoResult = {
+  code: SupportedPuskesmasId;
+  isRawatInap: boolean;
+  kapasitas: number;
+  nakes: { profesi: string; jumlah: number }[];
+};
+
+const dailyDataCache = new Map<string, CacheEntry<SimpusDailyItem>>();
+const staticInfoCache = new Map<
+  SupportedPuskesmasId,
+  CacheEntry<StaticPuskesmasInfoResult>
+>();
+
+const CACHE_TTL_PAST = 24 * 60 * 60 * 1000; // 24 hours for historical data
+const CACHE_TTL_TODAY = 10 * 60 * 1000; // 10 minutes for current day
+const CACHE_TTL_STATIC = 60 * 60 * 1000; // 1 hour for static info
+
+function getCacheTTL(dateStr: string): number {
+  const todayStr = new Date().toISOString().split("T")[0];
+  return dateStr === todayStr ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
+}
+
+async function mapConcurrent<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+  const results: R[] = new Array(items.length);
+  let index = 0;
+
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (index < items.length) {
+        const currentIndex = index++;
+        results[currentIndex] = await fn(items[currentIndex]);
+      }
+    },
+  );
+
+  await Promise.all(workers);
+  return results;
+}
+
 async function getSimpusToken(): Promise<string> {
   const now = Date.now();
   if (cachedToken && cachedTokenExpiresAt > now + 60000) {
     return cachedToken;
   }
 
-  const baseUrl =
-    process.env.BASE_URL || "https://simpus.banyumaskab.go.id/api_telkom/v1";
+  const baseUrl = process.env.BASE_URL || "https://simpus.banyumaskab.go.id/api_telkom/v1";
   const clientId = process.env.CLIENT_ID || "";
   const clientSecret = process.env.CLIENT_SECRET || "";
 
@@ -88,7 +137,13 @@ async function fetchPuskesmasStaticInfo(
   code: SupportedPuskesmasId,
   baseUrl: string,
   headers: Record<string, string>,
-) {
+): Promise<StaticPuskesmasInfoResult | null> {
+  const now = Date.now();
+  const cached = staticInfoCache.get(code);
+  if (cached && cached.expiresAt > now) {
+    return cached.data;
+  }
+
   const info = TARGET_PUSKESMAS[code];
   if (!info) return null;
 
@@ -122,7 +177,17 @@ async function fetchPuskesmasStaticInfo(
     }
   }
 
-  return { code, isRawatInap, kapasitas, nakes: nakesList };
+  const result: StaticPuskesmasInfoResult = {
+    code,
+    isRawatInap,
+    kapasitas,
+    nakes: nakesList,
+  };
+  staticInfoCache.set(code, {
+    data: result,
+    expiresAt: now + CACHE_TTL_STATIC,
+  });
+  return result;
 }
 
 async function fetchDailyPuskesmasData(
@@ -132,6 +197,13 @@ async function fetchDailyPuskesmasData(
   baseUrl: string,
   headers: Record<string, string>,
 ): Promise<SimpusDailyItem> {
+  const cacheKey = `${code}_${dateStr}`;
+  const now = Date.now();
+  const cached = dailyDataCache.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    return cached.data;
+  }
+
   const info = TARGET_PUSKESMAS[code];
   const [kunjRes, penyakitRes] = await Promise.all([
     fetch(
@@ -176,7 +248,7 @@ async function fetchDailyPuskesmasData(
       ? Math.min(staticInfo.kapasitas, Math.round(pasienSakit * 0.15))
       : 0;
 
-  return {
+  const result: SimpusDailyItem = {
     date: dateStr,
     puskesmasId: code,
     simpusId: info.simpusId,
@@ -193,6 +265,13 @@ async function fetchDailyPuskesmasData(
     },
     penyakit: penyakitMap,
   };
+
+  dailyDataCache.set(cacheKey, {
+    data: result,
+    expiresAt: now + getCacheTTL(dateStr),
+  });
+
+  return result;
 }
 
 export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
@@ -238,20 +317,27 @@ export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
       }
     }
 
-    const tasks: Promise<SimpusDailyItem>[] = [];
+    const taskItems: { code: SupportedPuskesmasId; dateStr: string }[] = [];
     for (const code of selectedCodes) {
-      const staticData = staticInfoMap.get(code) || {
+      for (const dateStr of data.dates) {
+        taskItems.push({ code, dateStr });
+      }
+    }
+
+    const dailyData = await mapConcurrent(taskItems, 10, (item) => {
+      const staticData = staticInfoMap.get(item.code) || {
         isRawatInap: false,
         kapasitas: 0,
         nakes: [],
       };
-      for (const dateStr of data.dates) {
-        tasks.push(
-          fetchDailyPuskesmasData(code, dateStr, staticData, baseUrl, headers),
-        );
-      }
-    }
+      return fetchDailyPuskesmasData(
+        item.code,
+        item.dateStr,
+        staticData,
+        baseUrl,
+        headers,
+      );
+    });
 
-    const dailyData = await Promise.all(tasks);
     return { dailyData, nakesBaselines };
   });

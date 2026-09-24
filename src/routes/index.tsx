@@ -94,6 +94,8 @@ function Dashboard() {
       return fetchDashboardData(puskesmas, start, end);
     },
     placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const handleNakesUpload = async () => {
