@@ -9,19 +9,34 @@ interface EwsMapProps {
   data: DashboardData;
 }
 
-/** Build tooltip HTML from live data — called on every mouseover so it's always fresh. */
-function buildTooltip(feature: any, data: DashboardData): string {
-  const code = feature.properties?.puskesmasCode;
+interface GeoJsonFeature {
+  properties?: {
+    name?: string;
+    puskesmasCode?: string;
+  };
+}
+
+interface EwsAlertItem {
+  penyakit: string;
+  kasus: number;
+  threshold: number;
+  status: "SIAGA" | "WASPADA";
+}
+
+function buildTooltip(feature: GeoJsonFeature, data: DashboardData): string {
+  const code = feature.properties?.puskesmasCode ?? "";
   const name = feature.properties?.name ?? code;
-  const alerts = (data as any).puskesmasAlerts?.[code] ?? [];
+  const alerts: EwsAlertItem[] = data.puskesmasAlerts?.[code] ?? [];
 
   let statusText = "Normal";
-  let color = "#16a34a"; // green-600
+  let color = "#16a34a";
 
   if (alerts.length > 0) {
-    const hasSiaga = alerts.some((a: any) => a.status === "SIAGA");
-    statusText = alerts.map((a: any) => `${a.status} — ${a.penyakit} (${a.kasus} kasus)`).join("<br/>");
-    color = hasSiaga ? "#dc2626" : "#ca8a04"; // red-600 or yellow-600
+    const hasSiaga = alerts.some((a) => a.status === "SIAGA");
+    statusText = alerts
+      .map((a) => `${a.status} — ${a.penyakit} (${a.kasus} kasus)`)
+      .join("<br/>");
+    color = hasSiaga ? "#dc2626" : "#ca8a04";
   }
 
   return `
@@ -33,17 +48,17 @@ function buildTooltip(feature: any, data: DashboardData): string {
 }
 
 export function EwsMap({ data }: EwsMapProps) {
-  const [geoData, setGeoData] = useState<any>(null);
+  const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
-  // Always holds the latest `data` prop so event handlers never go stale.
   const dataRef = useRef<DashboardData>(data);
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
 
-  // Keep a ref to every layer so we can re-apply styles when data changes.
-  const layersRef = useRef<{ feature: any; layer: any }[]>([]);
+  const layersRef = useRef<{ feature: GeoJsonFeature; layer: L.Path }[]>([]);
 
   useEffect(() => {
     fetch("/data/banyumas.geojson")
@@ -58,21 +73,20 @@ export function EwsMap({ data }: EwsMapProps) {
       });
   }, []);
 
-  // Re-apply styles whenever `data` changes (filter / date range switch).
   useEffect(() => {
     for (const { feature, layer } of layersRef.current) {
       layer.setStyle(computeStyle(feature, dataRef.current));
     }
-  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data]);
 
-  function computeStyle(feature: any, d: DashboardData) {
-    let fillColor = "#22c55e"; // green — normal
+  function computeStyle(feature: GeoJsonFeature, d: DashboardData) {
+    let fillColor = "#22c55e";
     let fillOpacity = 0.4;
 
-    const code = feature.properties?.puskesmasCode;
-    const alerts = (d as any).puskesmasAlerts?.[code] ?? [];
-    const hasSiaga = alerts.some((a: any) => a.status === "SIAGA");
-    const hasWaspada = alerts.some((a: any) => a.status === "WASPADA");
+    const code = feature.properties?.puskesmasCode ?? "";
+    const alerts: EwsAlertItem[] = d.puskesmasAlerts?.[code] ?? [];
+    const hasSiaga = alerts.some((a) => a.status === "SIAGA");
+    const hasWaspada = alerts.some((a) => a.status === "WASPADA");
 
     if (d.nama === "Semua Puskesmas") {
       if (hasSiaga) {
@@ -83,11 +97,15 @@ export function EwsMap({ data }: EwsMapProps) {
         fillOpacity = 0.6;
       }
     } else {
-      const selectedId = (d as any).pId;
+      const selectedId = d.pId;
       if (code === selectedId) {
         const globalSiaga = d.ewsAlerts.some((a) => a.status === "SIAGA");
         const globalWaspada = d.ewsAlerts.some((a) => a.status === "WASPADA");
-        fillColor = globalSiaga ? "#ef4444" : globalWaspada ? "#eab308" : "#22c55e";
+        fillColor = globalSiaga
+          ? "#ef4444"
+          : globalWaspada
+            ? "#eab308"
+            : "#22c55e";
         fillOpacity = 0.65;
       } else {
         fillOpacity = 0.12;
@@ -106,28 +124,29 @@ export function EwsMap({ data }: EwsMapProps) {
 
   const tooltip = useRef<L.Tooltip | null>(null);
 
-  const onEachFeature = (feature: any, layer: any) => {
-    // Register layer for later style updates.
+  const onEachFeature = (feature: GeoJsonFeature, layer: L.Path) => {
     layersRef.current.push({ feature, layer });
 
     layer.on({
-      mouseover(e: any) {
-        // Always build tooltip from the ref — guaranteed to be fresh.
+      mouseover(e: L.LeafletMouseEvent) {
         const html = buildTooltip(feature, dataRef.current);
         if (!tooltip.current) {
-          tooltip.current = L.tooltip({ permanent: false, direction: "top", opacity: 0.95 });
+          tooltip.current = L.tooltip({
+            permanent: false,
+            direction: "top",
+            opacity: 0.95,
+          });
         }
         tooltip.current.setContent(html);
         layer.bindTooltip(tooltip.current).openTooltip(e.latlng);
         layer.setStyle({ weight: 3, opacity: 1 });
       },
-      mousemove(e: any) {
+      mousemove(e: L.LeafletMouseEvent) {
         tooltip.current?.setLatLng(e.latlng);
       },
       mouseout() {
         layer.closeTooltip();
         layer.unbindTooltip();
-        // Restore original style from current data.
         layer.setStyle(computeStyle(feature, dataRef.current));
       },
     });
@@ -164,8 +183,12 @@ export function EwsMap({ data }: EwsMapProps) {
         />
         <GeoJSON
           data={geoData}
-          style={(feature) => computeStyle(feature!, dataRef.current)}
-          onEachFeature={onEachFeature}
+          style={(feature) =>
+            computeStyle(feature as GeoJsonFeature, dataRef.current)
+          }
+          onEachFeature={(feature, layer) =>
+            onEachFeature(feature as GeoJsonFeature, layer as L.Path)
+          }
         />
       </MapContainer>
     </div>

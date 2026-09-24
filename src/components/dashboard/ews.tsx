@@ -51,7 +51,9 @@ export function EwsAlertBanner({ alerts }: EwsAlertBannerProps) {
         <div className="flex-1 space-y-1">
           <p
             className={`text-sm font-semibold ${
-              hasSiaga ? "text-red-800 dark:text-red-300" : "text-amber-800 dark:text-amber-300"
+              hasSiaga
+                ? "text-red-800 dark:text-red-300"
+                : "text-amber-800 dark:text-amber-300"
             }`}
           >
             {hasSiaga ? "Peringatan SIAGA Aktif" : "Peringatan WASPADA Aktif"} —{" "}
@@ -69,7 +71,9 @@ export function EwsAlertBanner({ alerts }: EwsAlertBannerProps) {
               >
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
-                    a.status === "SIAGA" ? "bg-red-500 animate-pulse" : "bg-amber-500"
+                    a.status === "SIAGA"
+                      ? "bg-red-500 animate-pulse"
+                      : "bg-amber-500"
                   }`}
                 />
                 {a.status} {a.penyakit}: {a.kasus} kasus (batas {a.threshold})
@@ -97,18 +101,37 @@ export function EwsAlertBanner({ alerts }: EwsAlertBannerProps) {
 
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
 
-function EwsTooltip({ active, payload, label }: any) {
+interface EwsPayloadItem {
+  dataKey: string;
+  name: string;
+  value: number;
+  color?: string;
+}
+
+interface EwsTooltipProps {
+  active?: boolean;
+  payload?: EwsPayloadItem[];
+  label?: string;
+}
+
+function EwsTooltip({ active, payload, label }: EwsTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const series = payload.filter((p: any) => !p.dataKey?.startsWith("threshold"));
+  const series = payload.filter((p) => !p.dataKey?.startsWith("threshold"));
 
   return (
     <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-lg text-xs">
       <p className="mb-2 font-semibold text-foreground">{label}</p>
-      {series.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center justify-between gap-6">
+      {series.map((p) => (
+        <div
+          key={p.dataKey}
+          className="flex items-center justify-between gap-6"
+        >
           <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: p.color }}
+            />
             {p.name}
           </span>
           <span className="font-bold text-foreground">{p.value} kasus</span>
@@ -124,9 +147,9 @@ interface EwsTrendChartProps {
 
 export function EwsTrendChart({ data }: EwsTrendChartProps) {
   // Find the threshold values (constant across all weeks scaled to puskesmas)
-  const thresholdDbd   = data[0]?.thresholdDbd   ?? 28;
+  const thresholdDbd = data[0]?.thresholdDbd ?? 28;
   const thresholdDiare = data[0]?.thresholdDiare ?? 55;
-  const thresholdIspa  = data[0]?.thresholdIspa  ?? 120;
+  const thresholdIspa = data[0]?.thresholdIspa ?? 120;
 
   // Max Y for domain
   const maxVal = Math.max(
@@ -135,8 +158,11 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
   );
 
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <ComposedChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={415}>
+      <ComposedChart
+        data={data}
+        margin={{ top: 12, right: 24, left: 0, bottom: 8 }}
+      >
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis
           dataKey="minggu"
@@ -146,18 +172,29 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
         <YAxis
           tick={{ fontSize: 11 }}
           className="text-muted-foreground fill-muted-foreground"
-          width={36}
+          width={40}
           domain={[0, Math.ceil(maxVal * 1.12)]}
         />
         <Tooltip content={<EwsTooltip />} />
         <Legend
           iconType="circle"
           iconSize={8}
-          formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
+          verticalAlign="top"
+          align="right"
+          wrapperStyle={{ paddingBottom: "12px" }}
+          formatter={(value) => (
+            <span className="text-xs font-medium text-muted-foreground">
+              {value}
+            </span>
+          )}
         />
 
         {/* Danger zones above each threshold */}
-        <ReferenceArea y1={thresholdDbd}   y2={Math.ceil(maxVal * 1.12)} fill="#ef44441a" />
+        <ReferenceArea
+          y1={thresholdDbd}
+          y2={Math.ceil(maxVal * 1.12)}
+          fill="#ef44441a"
+        />
 
         {/* Threshold reference lines */}
         <ReferenceLine
@@ -165,21 +202,39 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
           stroke="#ef4444"
           strokeDasharray="5 3"
           strokeWidth={1.5}
-          label={{ value: `Batas DBD: ${thresholdDbd}`, position: "insideTopRight", fontSize: 10, fill: "#ef4444" }}
+          label={{
+            value: `Batas DBD: ${thresholdDbd}`,
+            position: "insideBottomRight",
+            fontSize: 10,
+            fill: "#ef4444",
+            dy: -2,
+          }}
         />
         <ReferenceLine
           y={thresholdDiare}
           stroke="#f97316"
           strokeDasharray="5 3"
           strokeWidth={1.5}
-          label={{ value: `Batas Diare: ${thresholdDiare}`, position: "insideTopRight", fontSize: 10, fill: "#f97316" }}
+          label={{
+            value: `Batas Diare: ${thresholdDiare}`,
+            position: "insideTopRight",
+            fontSize: 10,
+            fill: "#f97316",
+            dy: -10,
+          }}
         />
         <ReferenceLine
           y={thresholdIspa}
           stroke="#eab308"
           strokeDasharray="5 3"
           strokeWidth={1.5}
-          label={{ value: `Batas ISPA: ${thresholdIspa}`, position: "insideTopRight", fontSize: 10, fill: "#eab308" }}
+          label={{
+            value: `Batas ISPA: ${thresholdIspa}`,
+            position: "insideTopRight",
+            fontSize: 10,
+            fill: "#eab308",
+            dy: -12,
+          }}
         />
 
         {/* Actual case lines */}
@@ -188,27 +243,27 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
           dataKey="dbd"
           name="DBD"
           stroke="#ef4444"
-          strokeWidth={2}
-          dot={{ r: 3, fill: "#ef4444" }}
-          activeDot={{ r: 5 }}
+          strokeWidth={2.5}
+          dot={{ r: 4, fill: "#ef4444" }}
+          activeDot={{ r: 6 }}
         />
         <Line
           type="monotone"
           dataKey="diare"
           name="Diare"
           stroke="#f97316"
-          strokeWidth={2}
-          dot={{ r: 3, fill: "#f97316" }}
-          activeDot={{ r: 5 }}
+          strokeWidth={2.5}
+          dot={{ r: 4, fill: "#f97316" }}
+          activeDot={{ r: 6 }}
         />
         <Line
           type="monotone"
           dataKey="ispa"
           name="ISPA"
           stroke="#eab308"
-          strokeWidth={2}
-          dot={{ r: 3, fill: "#eab308" }}
-          activeDot={{ r: 5 }}
+          strokeWidth={2.5}
+          dot={{ r: 4, fill: "#eab308" }}
+          activeDot={{ r: 6 }}
         />
       </ComposedChart>
     </ResponsiveContainer>

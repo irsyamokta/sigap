@@ -16,6 +16,16 @@ function CustomMonthCaption(
   },
 ) {
   const { calendarMonth, displayIndex, ...rest } = props;
+  const dayPicker = useDayPicker() as unknown as {
+    nextMonth?: Date;
+    previousMonth?: Date;
+    goToMonth: (month: Date) => void;
+    formatters: {
+      formatMonthCaption: (date: Date, options?: object) => string;
+    };
+    locale?: object;
+    months: unknown[];
+  };
   const {
     nextMonth,
     previousMonth,
@@ -23,13 +33,16 @@ function CustomMonthCaption(
     formatters: { formatMonthCaption },
     locale,
     months,
-  } = useDayPicker() as any;
+  } = dayPicker;
 
   const isFirst = displayIndex === 0;
   const isLast = displayIndex === months.length - 1;
 
   return (
-    <div {...rest} className="relative flex items-center justify-center h-9 px-8">
+    <div
+      {...rest}
+      className="relative flex items-center justify-center h-9 px-8"
+    >
       {isFirst && (
         <button
           type="button"
@@ -72,7 +85,12 @@ function HiddenNav() {
   return <></>;
 }
 
-function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+function Calendar({
+  className,
+  classNames,
+  showOutsideDays = true,
+  ...props
+}: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -93,8 +111,10 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-none",
         ),
-        range_start: "bg-accent rounded-l-md [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
-        range_end: "day-range-end bg-accent rounded-r-md [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
+        range_start:
+          "bg-accent rounded-l-md [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
+        range_end:
+          "day-range-end bg-accent rounded-r-md [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
         selected:
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         today: "bg-accent text-accent-foreground",
@@ -107,7 +127,9 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ...classNames,
       }}
       components={{
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Nav: HiddenNav as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         MonthCaption: CustomMonthCaption as any,
         Chevron: ({ orientation }) =>
           orientation === "left" ? (
