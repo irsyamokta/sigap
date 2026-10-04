@@ -9,28 +9,28 @@ const MOCK_POPULATION_DATA: KecamatanPopulation[] = [
     namaKecamatan: "Kecamatan Purwokerto Barat",
     puskesmasId: "purwokerto_barat",
     puskesmasNama: "Puskesmas Purwokerto Barat",
-    jumlahPenduduk: 48250,
+    jumlahPenduduk: 54224,
   },
   {
     id: "kec_patikraja",
     namaKecamatan: "Kecamatan Patikraja",
     puskesmasId: "patikraja",
     puskesmasNama: "Puskesmas Patikraja",
-    jumlahPenduduk: 56120,
+    jumlahPenduduk: 63770,
   },
   {
     id: "kec_sokaraja",
     namaKecamatan: "Kecamatan Sokaraja",
     puskesmasId: "sokaraja_1",
     puskesmasNama: "Puskesmas Sokaraja 1",
-    jumlahPenduduk: 89400,
+    jumlahPenduduk: 92436,
   },
   {
     id: "kec_kembaran",
     namaKecamatan: "Kecamatan Kembaran",
     puskesmasId: "kembaran_1",
     puskesmasNama: "Puskesmas Kembaran 1",
-    jumlahPenduduk: 78600,
+    jumlahPenduduk: 83955,
   },
 ];
 

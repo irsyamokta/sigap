@@ -83,11 +83,13 @@ export async function fetchDashboardData(
   const currentDatesSet = new Set(datesToFetch);
   const prevDatesSet = new Set(prevDaysToFetch);
 
-  const [{ dailyData: allDailyData, nakesBaselines: apiNakesBaselines }, activeSubmissions] =
-    await Promise.all([
-      fetchSimpusData(pId, allDatesToFetch),
-      fetchActiveSubmissions(pId),
-    ]);
+  const [
+    { dailyData: allDailyData, nakesBaselines: apiNakesBaselines },
+    activeSubmissions,
+  ] = await Promise.all([
+    fetchSimpusData(pId, allDatesToFetch),
+    fetchActiveSubmissions(pId),
+  ]);
 
   const dailyData = allDailyData.filter((d) => currentDatesSet.has(d.date));
   const prevPasienSakit = allDailyData
