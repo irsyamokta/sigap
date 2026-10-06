@@ -1,4 +1,8 @@
-export { PerbandinganChart, KunjunganHarianChart } from "./charts/stat-charts";
+export {
+  PerbandinganChart,
+  KunjunganHarianChart,
+  KapasitasBarChart,
+} from "./charts/stat-charts";
 
 export {
   TenagaBarChart,
