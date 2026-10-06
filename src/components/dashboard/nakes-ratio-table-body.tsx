@@ -1,8 +1,6 @@
-import { Users, Trash2 } from "lucide-react";
+import { Trash2, Calculator } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getRatioBadge } from "./nakes-ratio-badge";
 import type { NakesRatioItem } from "@/types/workforce";
 
 const nf = new Intl.NumberFormat("id-ID");
@@ -46,14 +44,11 @@ export function NakesRatioTableBody({
                 aria-label="Pilih semua baris pada halaman ini"
               />
             </th>
+            <th className="px-4 py-3">Tanggal Pengajuan</th>
             <th className="px-4 py-3">Kecamatan</th>
             <th className="px-4 py-3">Fasilitas Kesehatan</th>
             <th className="px-4 py-3">Jenis Nakes</th>
             <th className="px-4 py-3 text-right">Jumlah Kebutuhan</th>
-            <th className="px-4 py-3 text-right">Jumlah Penduduk</th>
-            <th className="px-4 py-3 text-center">
-              Ratio (per 1.000 Penduduk)
-            </th>
             <th className="w-12 px-3 py-3 text-center">Aksi</th>
           </tr>
         </thead>
@@ -76,6 +71,18 @@ export function NakesRatioTableBody({
                     aria-label={`Pilih ${item.jenisNakes} ${item.namaKecamatan}`}
                   />
                 </td>
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                  {item.tanggalPengajuan
+                    ? new Date(item.tanggalPengajuan).toLocaleDateString(
+                        "id-ID",
+                        {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        },
+                      )
+                    : "-"}
+                </td>
                 <td className="px-4 py-3 font-semibold text-foreground">
                   {item.namaKecamatan}
                 </td>
@@ -87,15 +94,6 @@ export function NakesRatioTableBody({
                 </td>
                 <td className="px-4 py-3 text-right font-bold text-foreground">
                   {nf.format(item.kebutuhan)}
-                </td>
-                <td className="px-4 py-3 text-right text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <Users className="size-3 text-muted-foreground" />
-                    {nf.format(item.jumlahPenduduk)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {getRatioBadge(item.ratio)}
                 </td>
                 <td className="px-3 py-3 text-center">
                   <button
@@ -115,7 +113,7 @@ export function NakesRatioTableBody({
           {paginatedItems.length === 0 && (
             <tr>
               <td
-                colSpan={8}
+                colSpan={7}
                 className="py-12 text-center text-muted-foreground"
               >
                 <div className="flex flex-col items-center justify-center space-y-2">

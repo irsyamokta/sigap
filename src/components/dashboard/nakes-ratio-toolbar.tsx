@@ -41,7 +41,7 @@ export function NakesRatioToolbar({
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-sm font-bold text-foreground">
-            Hasil Kalkulasi Ratio Nakes per 1.000 Penduduk
+            Hasil Kalkulasi Kebutuhan Tenaga Kesehatan
           </h3>
           <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
             {totalItems} Data
@@ -52,21 +52,17 @@ export function NakesRatioToolbar({
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Rumus:{" "}
-          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground">
-            Ratio = (Kebutuhan Nakes / Jumlah Penduduk) × 1.000
-          </code>
-          {lastUpdated && (
-            <span className="ml-2 font-medium">
-              • Diperbarui:{" "}
+        {lastUpdated && (
+          <p className="text-xs text-muted-foreground mt-0.5">
+            <span className="font-medium">
+              Diperbarui:{" "}
               {lastUpdated.toLocaleTimeString("id-ID", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </span>
-          )}
-        </p>
+          </p>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

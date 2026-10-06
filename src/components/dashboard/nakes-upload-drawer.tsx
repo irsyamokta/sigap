@@ -5,7 +5,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from "react";
-import { FileSpreadsheet, X, AlertCircle } from "lucide-react";
+import { FileSpreadsheet, X, AlertCircle, Calendar } from "lucide-react";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
@@ -16,13 +16,6 @@ import { submitNakesRequirementFn } from "@/lib/api/workforce";
 import { parseNakesExcelFile } from "@/lib/excel-parser";
 import { NakesUploadPreview } from "./nakes-upload-preview";
 import { FileDropZone } from "./file-drop-zone";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface NakesUploadDrawerProps {
   userRole?: "DINKES" | "PUSKESMAS";
@@ -35,9 +28,14 @@ export function NakesUploadDrawer({
   selectedPuskesmasId = "purwokerto_barat",
   onProcessUpload,
 }: NakesUploadDrawerProps) {
+  const isDinkesRole = userRole === "DINKES";
+
   const [isOpen, setIsOpen] = useState(false);
   const [targetPuskesmasId, setTargetPuskesmasId] = useState<PuskesmasId>(
     selectedPuskesmasId === "all" ? "purwokerto_barat" : selectedPuskesmasId,
+  );
+  const [tanggalPengajuan, setTanggalPengajuan] = useState<string>(() =>
+    new Date().toISOString().split("T")[0],
   );
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<NakesRequirementInput[] | null>(
@@ -54,12 +52,10 @@ export function NakesUploadDrawer({
     }
   }, [selectedPuskesmasId]);
 
+  if (isDinkesRole) return null;
+
   const activeTarget =
-    userRole === "PUSKESMAS"
-      ? selectedPuskesmasId === "all"
-        ? "purwokerto_barat"
-        : selectedPuskesmasId
-      : targetPuskesmasId;
+    selectedPuskesmasId === "all" ? "purwokerto_barat" : selectedPuskesmasId;
 
   const resetUploadState = () => {
     setFile(null);
@@ -108,6 +104,7 @@ export function NakesUploadDrawer({
       await submitNakesRequirementFn({
         data: {
           targetPuskesmasCode: activeTarget,
+          tanggalPengajuan: tanggalPengajuan,
           items: parsedData.map((row) => ({
             jenisNakes: row.jenisNakes,
             kebutuhan: Math.round(row.kebutuhan),
@@ -138,10 +135,14 @@ export function NakesUploadDrawer({
   const downloadSampleTemplate = () => {
     const sampleData = [
       { "Jenis Nakes": "Dokter", "Jumlah Kebutuhan": 12 },
-      { "Jenis Nakes": "Dokter Gigi", "Jumlah Kebutuhan": 4 },
+      { "Jenis Nakes": "Dr. Gigi", "Jumlah Kebutuhan": 4 },
       { "Jenis Nakes": "Perawat", "Jumlah Kebutuhan": 30 },
       { "Jenis Nakes": "Bidan", "Jumlah Kebutuhan": 18 },
-      { "Jenis Nakes": "Tenaga Kesehatan Masyarakat", "Jumlah Kebutuhan": 6 },
+      { "Jenis Nakes": "Farmasi", "Jumlah Kebutuhan": 5 },
+      { "Jenis Nakes": "Kesmas", "Jumlah Kebutuhan": 6 },
+      { "Jenis Nakes": "Kesling", "Jumlah Kebutuhan": 4 },
+      { "Jenis Nakes": "Gizi", "Jumlah Kebutuhan": 4 },
+      { "Jenis Nakes": "Teklabmed", "Jumlah Kebutuhan": 4 },
     ];
     const worksheet = XLSX.utils.json_to_sheet(sampleData);
     const workbook = XLSX.utils.book_new();
@@ -198,35 +199,18 @@ export function NakesUploadDrawer({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-5 sm:p-5">
-          {userRole === "DINKES" && (
-            <div className="rounded-xl border border-border bg-muted/40 p-3.5 space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">
-                Target Puskesmas Pengajuan
-              </label>
-              <Select
-                value={targetPuskesmasId}
-                onValueChange={(val) =>
-                  setTargetPuskesmasId(val as PuskesmasId)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pilih Target Puskesmas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    Semua Puskesmas (Master Upload)
-                  </SelectItem>
-                  {puskesmasList
-                    .filter((p) => p.id !== "all")
-                    .map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.nama}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="rounded-xl border border-border bg-muted/40 p-3.5 space-y-1.5">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <Calendar className="size-3.5 text-muted-foreground" />
+              Tanggal Pengajuan
+            </label>
+            <input
+              type="date"
+              value={tanggalPengajuan}
+              onChange={(e) => setTanggalPengajuan(e.target.value)}
+              className="h-9.5 w-full rounded-xl border border-input bg-card px-3 text-xs font-semibold shadow-xs transition-all outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
 
           <FileDropZone
             file={file}
