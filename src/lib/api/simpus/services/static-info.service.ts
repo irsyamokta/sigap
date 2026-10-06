@@ -37,8 +37,8 @@ export async function fetchPuskesmasStaticInfo(
     const rawatJson = await rawatRes.json();
     if (rawatJson?.response?.kapasitasRanjang) {
       isRawatInap = Boolean(rawatJson.response.kapasitasRanjang.isRawatInap);
-      kapasitas =
-        Number(rawatJson.response.kapasitasRanjang.kapasitas) || kapasitas;
+      const rawKap = Number(rawatJson.response.kapasitasRanjang.kapasitas);
+      kapasitas = isNaN(rawKap) ? kapasitas : rawKap;
     }
   }
 
