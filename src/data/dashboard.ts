@@ -15,6 +15,7 @@ import {
   aggregateDailyData,
   buildTrendSeries,
   computeTrendPenyakit,
+  computePasienSakitHint,
   computeTopPuskesmas,
   buildPrevDatesRange,
 } from "@/lib/dashboard/data-aggregator";
@@ -141,6 +142,8 @@ export async function fetchDashboardData(
     totalKebutuhan,
     rasio,
     prioritasNakes,
+    prioritasTenagaKesehatan,
+    prioritasPuskesmas,
   } = computeWorkforceMetrics(
     pId,
     activeSubmissions,
@@ -155,6 +158,13 @@ export async function fetchDashboardData(
     endDate,
     prevPasienSakit,
     prevDaysToFetch.length,
+  );
+
+  const pasienSakitHint = computePasienSakitHint(
+    pasienSakit,
+    prevPasienSakit,
+    prevDaysToFetch.length,
+    datesToFetch.length,
   );
 
   const { targetPuskesmasKunjungan, topPuskesmasNama } = computeTopPuskesmas(
@@ -175,10 +185,40 @@ export async function fetchDashboardData(
     total: selectedDailyMap?.get(isoDay) ?? 0,
   }));
 
+  const kapasitasPerPuskesmas = [
+    "purwokerto_barat",
+    "patikraja",
+    "sokaraja_1",
+    "kembaran_1",
+  ].map((code) => {
+    const pData = allDailyData.find((item) => item.puskesmasId === code);
+    const info = puskesmasList.find((item) => item.id === code);
+    const isRawatInap =
+      pData?.rawatInap?.isRawatInap ??
+      (code === "purwokerto_barat" || code === "sokaraja_1");
+    const rawKap = pData?.rawatInap?.kapasitas;
+    const kapasitas =
+      typeof rawKap === "number"
+        ? rawKap
+        : code === "purwokerto_barat"
+          ? 15
+          : code === "sokaraja_1"
+            ? 20
+            : 0;
+    return {
+      id: code,
+      nama: info?.nama ?? code,
+      singkat: (info?.nama ?? code).replace("Puskesmas ", ""),
+      kapasitas,
+      isRawatInap,
+    };
+  });
+
   return {
     nama: puskesmasList.find((p) => p.id === pId)?.nama ?? "Semua Puskesmas",
     pasienSakit,
     pasienSembuh,
+    pasienSakitHint,
     trenPenyakit,
     trenPenyakitHint,
     penyakitTeratas,
@@ -188,6 +228,8 @@ export async function fetchDashboardData(
     totalKebutuhan,
     rasio,
     prioritasNakes,
+    prioritasTenagaKesehatan,
+    prioritasPuskesmas,
     trenPerawatan,
     perbandinganKapasitas,
     okupansiRuang,
@@ -209,5 +251,6 @@ export async function fetchDashboardData(
     pId,
     puskesmasAlerts,
     nakesRatios,
+    kapasitasPerPuskesmas,
   };
 }

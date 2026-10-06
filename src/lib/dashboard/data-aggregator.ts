@@ -246,6 +246,25 @@ export function computeTrendPenyakit(
   return { trenPenyakit, trenPenyakitHint };
 }
 
+export function computePasienSakitHint(
+  pasienSakit: number,
+  prevPasienSakit: number,
+  prevDaysCount: number,
+  datesToFetchLength: number,
+): string {
+  if (prevDaysCount === 0 || prevPasienSakit === 0) {
+    return "Tidak ada data periode sebelumnya";
+  }
+
+  const currRate = pasienSakit / (datesToFetchLength || 1);
+  const prevRate = prevPasienSakit / prevDaysCount;
+
+  const pct = Number((((currRate - prevRate) / prevRate) * 100).toFixed(1));
+  const sign = pct > 0 ? "+" : "";
+  const formatted = `${sign}${pct.toLocaleString("id-ID")}%`;
+  return `${formatted} dari periode sebelumnya`;
+}
+
 export function computeTopPuskesmas(
   pId: PuskesmasId,
   puskesmasList: { id: PuskesmasId; nama: string }[],

@@ -36,14 +36,21 @@ export function computeWorkforceMetrics(
       const tersedia = wf.reduce((sum, n) => sum + n.tersedia, 0);
       const kebutuhan = wf.reduce((sum, n) => sum + n.kebutuhan, 0);
       const defisit = Math.max(0, kebutuhan - tersedia);
-      const rasioPct = kebutuhan ? clampPct((tersedia / kebutuhan) * 100) : 100;
-      const sortedByGap = [...wf].sort(
-        (a, b) => b.kebutuhan - b.tersedia - (a.kebutuhan - a.tersedia),
-      );
-      const topGapProfesi = sortedByGap[0];
-      const gapCount = topGapProfesi
-        ? Math.max(0, topGapProfesi.kebutuhan - topGapProfesi.tersedia)
+      const rawRatio = kebutuhan ? (tersedia / kebutuhan) * 100 : 100;
+      const rasioPct = clampPct(rawRatio);
+
+      const sortedByRatioProfesi = [...wf].sort((a, b) => {
+        const ratioA = a.kebutuhan ? (a.tersedia / a.kebutuhan) * 100 : 100;
+        const ratioB = b.kebutuhan ? (b.tersedia / b.kebutuhan) * 100 : 100;
+        if (ratioA !== ratioB) return ratioA - ratioB;
+        return (b.kebutuhan - b.tersedia) - (a.kebutuhan - a.tersedia);
+      });
+
+      const topProfesiByRatio = sortedByRatioProfesi[0];
+      const gapCount = topProfesiByRatio
+        ? Math.max(0, topProfesiByRatio.kebutuhan - topProfesiByRatio.tersedia)
         : 0;
+
       return {
         id: item.id,
         nama: item.nama,
@@ -51,17 +58,39 @@ export function computeWorkforceMetrics(
         tersedia,
         kebutuhan,
         defisit,
+        rawRatio,
         rasioPct,
-        topProfesi: topGapProfesi?.nama ?? "-",
+        topProfesi: topProfesiByRatio?.nama ?? "-",
         topProfesiGap: gapCount,
       };
     })
-    .sort((a, b) => b.defisit - a.defisit);
+    .sort((a, b) => {
+      if (a.rawRatio !== b.rawRatio) return a.rawRatio - b.rawRatio;
+      return b.defisit - a.defisit;
+    });
 
   const topPriorityPuskesmas = analisisPrioritas[0];
   const currentPuskesmasPrioritas = analisisPrioritas.find(
     (item) => item.id === pId,
   );
+
+  const sortedOverallProfesiByRatio = [...standarTenaga].sort((a, b) => {
+    const ratioA = a.kebutuhan ? (a.tersedia / a.kebutuhan) * 100 : 100;
+    const ratioB = b.kebutuhan ? (b.tersedia / b.kebutuhan) * 100 : 100;
+    if (ratioA !== ratioB) return ratioA - ratioB;
+    return (b.kebutuhan - b.tersedia) - (a.kebutuhan - a.tersedia);
+  });
+  const topProfesiOverallByRatio = sortedOverallProfesiByRatio[0]?.nama ?? "-";
+
+  const prioritasTenagaKesehatan =
+    pId === "all"
+      ? topProfesiOverallByRatio
+      : currentPuskesmasPrioritas?.topProfesi ?? "-";
+
+  const prioritasPuskesmas =
+    pId === "all"
+      ? topPriorityPuskesmas?.singkat ?? "-"
+      : "-";
 
   const prioritasNakes =
     pId === "all"
@@ -89,5 +118,7 @@ export function computeWorkforceMetrics(
     totalKebutuhan,
     rasio,
     prioritasNakes,
+    prioritasTenagaKesehatan,
+    prioritasPuskesmas,
   };
 }

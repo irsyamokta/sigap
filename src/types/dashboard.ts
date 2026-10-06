@@ -25,6 +25,7 @@ export interface DashboardData {
   nama: string;
   pasienSakit: number;
   pasienSembuh: number;
+  pasienSakitHint: string;
   trenPenyakit: string;
   trenPenyakitHint: string;
   penyakitTeratas: { nama: string; persen: number }[];
@@ -39,6 +40,8 @@ export interface DashboardData {
     fullName: string;
     keterangan: string;
   };
+  prioritasTenagaKesehatan: string;
+  prioritasPuskesmas: string;
   trenPerawatan: { bulan: string; sakit: number; sembuh: number }[];
   perbandinganKapasitas: { bulan: string; pasien: number; kapasitas: number }[];
   okupansiRuang: { bulan: string; okupansi: number }[];
@@ -54,4 +57,11 @@ export interface DashboardData {
   pId: PuskesmasId;
   puskesmasAlerts: Record<string, EwsAlert[]>;
   nakesRatios: NakesRatioItem[];
+  kapasitasPerPuskesmas: {
+    id: string;
+    nama: string;
+    singkat: string;
+    kapasitas: number;
+    isRawatInap: boolean;
+  }[];
 }
