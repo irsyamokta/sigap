@@ -167,6 +167,13 @@ function Dashboard() {
 
       <main className="mx-auto max-w-screen-2xl space-y-5 px-3 py-4 sm:px-6 sm:py-6">
         <DashboardPasienSection d={dashboardData} />
+        <DashboardEwsSection d={dashboardData} />
+        <DashboardKunjunganSection d={dashboardData} />
+        <DashboardPenyakitSection d={dashboardData} />
+        <DashboardNakesSection
+          d={dashboardData}
+          onDeleteItems={handleDeleteItems}
+        />
 
         <Section title="Ringkasan AI">
           <AiSummary
@@ -176,14 +183,6 @@ function Dashboard() {
             onGenerate={handleGenerateSummary}
           />
         </Section>
-
-        <DashboardEwsSection d={dashboardData} />
-        <DashboardKunjunganSection d={dashboardData} />
-        <DashboardPenyakitSection d={dashboardData} />
-        <DashboardNakesSection
-          d={dashboardData}
-          onDeleteItems={handleDeleteItems}
-        />
       </main>
 
       <NakesUploadDrawer

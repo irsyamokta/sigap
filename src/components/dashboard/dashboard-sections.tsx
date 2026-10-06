@@ -1,5 +1,6 @@
 import {
   Activity,
+  BedDouble,
   Minus,
   TrendingDown,
   TrendingUp,
@@ -11,11 +12,11 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { EwsAlertBanner, EwsTrendChart } from "@/components/dashboard/ews";
 import { EwsMap } from "@/components/dashboard/ews-map";
 import {
-  PerbandinganChart,
   StandarTenagaChart,
   TenagaBarChart,
   RasioDonut,
   KunjunganHarianChart,
+  KapasitasBarChart,
 } from "@/components/dashboard/charts";
 import { NakesRatioTable } from "@/components/dashboard/nakes-ratio-table";
 import type { DashboardData } from "@/types/dashboard";
@@ -34,7 +35,7 @@ export function DashboardPasienSection({ d }: DashboardPasienSectionProps) {
         <StatCard
           label="Jumlah Pasien Sakit"
           value={nf.format(d.pasienSakit)}
-          hint="+4,2% dari periode sebelumnya"
+          hint={d.pasienSakitHint}
           icon={Users}
         />
         <StatCard
@@ -111,18 +112,38 @@ export function DashboardEwsSection({ d }: DashboardEwsSectionProps) {
   );
 }
 
+
 interface DashboardPenyakitSectionProps {
   d: DashboardData;
 }
 
-export function DashboardPenyakitSection({ d }: DashboardPenyakitSectionProps) {
+export function DashboardPenyakitSection({
+  d,
+}: DashboardPenyakitSectionProps) {
+  const rawatInapCount = d.kapasitasPerPuskesmas.filter(
+    (p) => p.isRawatInap && p.kapasitas > 0,
+  ).length;
+  const totalKapasitas = d.kapasitasPerPuskesmas.reduce(
+    (sum, p) => sum + p.kapasitas,
+    0,
+  );
+
   return (
     <div className="grid gap-5 lg:grid-cols-3">
-      <Section
-        title="Perbandingan Pasien & Kapasitas"
-        className="lg:col-span-2"
-      >
-        <PerbandinganChart data={d.perbandinganKapasitas} height={260} />
+      <Section title="Kapasitas Rawat Inap per Puskesmas" className="lg:col-span-2">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+            <BedDouble className="size-3" />
+            {rawatInapCount} Puskesmas Rawat Inap
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+            Total Kapasitas: {totalKapasitas} TT
+          </span>
+        </div>
+        <KapasitasBarChart data={d.kapasitasPerPuskesmas} height={260} />
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">
+          Bar berwarna = Rawat Inap aktif · Bar pudar = Non-Rawat Inap
+        </p>
       </Section>
 
       <Section title="10 Penyakit Paling Sering Muncul">
@@ -173,42 +194,63 @@ export function DashboardNakesSection({
   d,
   onDeleteItems,
 }: DashboardNakesSectionProps) {
+  const sectionTitle = `Data Tenaga Kesehatan ${d.nama}`;
+
   return (
-    <Section title="Data Tenaga Kesehatan">
-      <div className="grid gap-4 xl:grid-cols-3">
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <Panel className="text-center">
-              <p className="text-[11px] text-muted-foreground">Total Tenaga</p>
-              <p className="mt-1 text-xl font-bold text-foreground">
+    <Section title={sectionTitle}>
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-12">
+        <Panel
+          title="Analisis Jumlah Tenaga per Profesi"
+          className="lg:col-span-3 flex flex-col justify-between"
+        >
+          <TenagaBarChart data={d.tenagaPerProfesi} />
+        </Panel>
+
+        <div className="lg:col-span-6 flex flex-col sm:flex-row items-stretch gap-2.5">
+          <div className="w-full sm:w-[150px] shrink-0 flex flex-col justify-between gap-2.5">
+            <Panel className="text-center p-3 flex flex-col justify-center items-center flex-1 bg-card shadow-xs border border-border">
+              <p className="text-[11px] font-medium text-muted-foreground leading-tight">
+                Total Tenaga Kesehatan
+              </p>
+              <p className="mt-1 text-xl font-extrabold text-foreground">
                 {d.totalTenaga}
               </p>
             </Panel>
-            <Panel className="text-center">
-              <p className="text-[11px] text-muted-foreground">Last Update</p>
-              <p className="mt-1 text-sm font-bold text-foreground">
-                21 Apr 2025
+            <Panel className="text-center p-3 flex flex-col justify-center items-center flex-1 bg-card shadow-xs border border-border">
+              <p className="text-[11px] font-medium text-muted-foreground leading-tight">
+                Prioritas Tenaga Kesehatan
+              </p>
+              <p
+                className="mt-1 text-sm font-bold text-foreground truncate max-w-full"
+                title={d.prioritasTenagaKesehatan}
+              >
+                {d.prioritasTenagaKesehatan}
               </p>
             </Panel>
-            <Panel className="text-center">
-              <p className="text-[11px] text-muted-foreground">
-                {d.prioritasNakes.label}
+            <Panel className="text-center p-3 flex flex-col justify-center items-center flex-1 bg-card shadow-xs border border-border">
+              <p className="text-[11px] font-medium text-muted-foreground leading-tight">
+                Prioritas Puskesmas
               </p>
-              <p className="mt-1 text-sm font-bold text-amber-600 truncate">
-                {d.prioritasNakes.nama}
+              <p
+                className="mt-1 text-sm font-bold text-amber-600 dark:text-amber-400 truncate max-w-full"
+                title={d.prioritasPuskesmas}
+              >
+                {d.prioritasPuskesmas}
               </p>
             </Panel>
           </div>
-          <Panel title="Analisis Jumlah Tenaga per Profesi">
-            <TenagaBarChart data={d.tenagaPerProfesi} />
+
+          <Panel
+            title="Analisis Berdasarkan Standar Tenaga Kesehatan"
+            className="flex-1 min-w-0 flex flex-col justify-between"
+          >
+            <StandarTenagaChart data={d.standarTenaga} />
           </Panel>
         </div>
-        <Panel title="Analisis Berdasarkan Standar Tenaga Kesehatan">
-          <StandarTenagaChart data={d.standarTenaga} />
-        </Panel>
+
         <Panel
           title="Rasio Kecukupan Tenaga Kesehatan"
-          className="flex flex-col justify-between"
+          className="lg:col-span-3 flex flex-col justify-between"
         >
           <RasioDonut
             value={d.rasio}
