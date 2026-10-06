@@ -29,4 +29,5 @@ export interface NakesRatioItem {
   kebutuhan: number;
   jumlahPenduduk: number;
   ratio: number;
+  tanggalPengajuan?: string;
 }

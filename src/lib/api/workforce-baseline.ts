@@ -121,12 +121,8 @@ export function getMergedWorkforceData(
 
     for (const baseItem of baselineItems) {
       const key = normalizeNakesProfesi(baseItem.jenisNakes);
-      const subItem = submission?.items.find(
-        (i) => normalizeNakesProfesi(i.jenisNakes) === key,
-      );
-
       const tersedia = baseItem.tersedia;
-      const kebutuhan = subItem ? subItem.kebutuhan : baseItem.kebutuhan;
+      const kebutuhan = baseItem.kebutuhan;
 
       const existing = map.get(key);
       if (existing) {
@@ -134,27 +130,6 @@ export function getMergedWorkforceData(
         existing.kebutuhan += kebutuhan;
       } else {
         map.set(key, { tersedia, kebutuhan });
-      }
-    }
-
-    if (submission) {
-      for (const subItem of submission.items) {
-        const key = normalizeNakesProfesi(subItem.jenisNakes);
-        const existsInBaseline = baselineItems.some(
-          (b) => normalizeNakesProfesi(b.jenisNakes) === key,
-        );
-        if (!existsInBaseline) {
-          const existing = map.get(key);
-          if (existing) {
-            existing.kebutuhan += subItem.kebutuhan;
-            if (subItem.tersedia > 0) existing.tersedia += subItem.tersedia;
-          } else {
-            map.set(key, {
-              tersedia: subItem.tersedia,
-              kebutuhan: subItem.kebutuhan,
-            });
-          }
-        }
       }
     }
   }
@@ -189,6 +164,7 @@ export async function buildNakesRatiosFromSubmissions(
         kebutuhan: item.kebutuhan,
         jumlahPenduduk: pop.jumlahPenduduk,
         ratio,
+        tanggalPengajuan: sub.submittedAt,
       });
     }
   }

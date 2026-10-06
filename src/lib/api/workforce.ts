@@ -60,6 +60,7 @@ export const submitNakesRequirementFn = createServerFn({ method: "POST" })
   .validator(
     z.object({
       targetPuskesmasCode: z.string().min(1),
+      tanggalPengajuan: z.string().optional(),
       items: z
         .array(
           z.object({
@@ -113,6 +114,10 @@ export const submitNakesRequirementFn = createServerFn({ method: "POST" })
       "kembaran_1",
     ];
 
+    const submissionDate = data.tanggalPengajuan
+      ? new Date(data.tanggalPengajuan)
+      : new Date();
+
     if (data.targetPuskesmasCode === "all") {
       const itemsWithCode = data.items.filter((i) => i.puskesmasCode);
 
@@ -129,6 +134,7 @@ export const submitNakesRequirementFn = createServerFn({ method: "POST" })
             data: {
               puskesmasCode: code,
               submittedById: user.id,
+              submittedAt: submissionDate,
               items: {
                 create: pItems.map((item) => ({
                   jenisNakes: item.jenisNakes,
@@ -145,6 +151,7 @@ export const submitNakesRequirementFn = createServerFn({ method: "POST" })
             data: {
               puskesmasCode: code,
               submittedById: user.id,
+              submittedAt: submissionDate,
               items: {
                 create: data.items.map((item) => ({
                   jenisNakes: item.jenisNakes,
@@ -162,6 +169,7 @@ export const submitNakesRequirementFn = createServerFn({ method: "POST" })
         data: {
           puskesmasCode: data.targetPuskesmasCode,
           submittedById: user.id,
+          submittedAt: submissionDate,
           items: {
             create: data.items.map((item) => ({
               jenisNakes: item.jenisNakes,
