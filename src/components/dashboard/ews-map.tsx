@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { DashboardData } from "@/data/dashboard";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const EwsMapClient = lazy(() =>
   import("./ews-map-client").then((mod) => ({ default: mod.EwsMap })),
@@ -62,17 +62,9 @@ export function EwsMap({ data }: { data: DashboardData }) {
   return (
     <div>
       {!mounted ? (
-        <div className="flex h-[350px] w-full items-center justify-center rounded-xl border bg-muted/20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <Skeleton className="h-[350px] w-full rounded-xl" />
       ) : (
-        <Suspense
-          fallback={
-            <div className="flex h-[350px] w-full items-center justify-center rounded-xl border bg-muted/20">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          }
-        >
+        <Suspense fallback={<Skeleton className="h-[350px] w-full rounded-xl" />}>
           <EwsMapClient data={data} />
         </Suspense>
       )}

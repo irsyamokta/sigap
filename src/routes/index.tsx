@@ -1,10 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  useQuery,
-  useQueryClient,
-  keepPreviousData,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
@@ -21,6 +17,7 @@ import {
   DashboardNakesSection,
   DashboardAlertBanner,
 } from "@/components/dashboard/dashboard-sections";
+import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton";
 import { NakesUploadDrawer } from "@/components/dashboard/nakes-upload-drawer";
 
 import { fetchDashboardData } from "@/data/dashboard";
@@ -80,6 +77,7 @@ function Dashboard() {
   const {
     data: dashboardData,
     isLoading,
+    isFetching,
     error,
   } = useQuery({
     queryKey: [
@@ -93,7 +91,6 @@ function Dashboard() {
       const end = range?.to ?? range?.from ?? getDefaultRange().to!;
       return fetchDashboardData(puskesmas, start, end);
     },
-    placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -127,26 +124,7 @@ function Dashboard() {
     await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   };
 
-  if (isLoading && !dashboardData) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center space-y-4 bg-background">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
-        <p className="animate-pulse text-sm text-muted-foreground">
-          Memuat data agregat SIMPUS...
-        </p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-destructive">
-        Gagal memuat data: {(error as Error).message}
-      </div>
-    );
-  }
-
-  if (!dashboardData) return null;
+  const showSkeleton = isLoading || isFetching || !dashboardData;
 
   return (
     <div className="min-h-screen bg-background">
@@ -163,27 +141,39 @@ function Dashboard() {
         defaultRange={getDefaultRange()}
       />
 
-      <DashboardAlertBanner alerts={dashboardData.ewsAlerts} />
+      {error ? (
+        <div className="mx-auto max-w-screen-2xl p-6 text-center text-destructive">
+          Gagal memuat data: {(error as Error).message}
+        </div>
+      ) : showSkeleton ? (
+        <main className="mx-auto max-w-screen-2xl space-y-5 px-3 py-4 sm:px-6 sm:py-6">
+          <DashboardSkeleton />
+        </main>
+      ) : (
+        <>
+          <DashboardAlertBanner alerts={dashboardData.ewsAlerts} />
 
-      <main className="mx-auto max-w-screen-2xl space-y-5 px-3 py-4 sm:px-6 sm:py-6">
-        <DashboardPasienSection d={dashboardData} />
-        <DashboardEwsSection d={dashboardData} />
-        <DashboardKunjunganSection d={dashboardData} />
-        <DashboardPenyakitSection d={dashboardData} />
-        <DashboardNakesSection
-          d={dashboardData}
-          onDeleteItems={handleDeleteItems}
-        />
+          <main className="mx-auto max-w-screen-2xl space-y-5 px-3 py-4 sm:px-6 sm:py-6">
+            <DashboardPasienSection d={dashboardData} />
+            <DashboardEwsSection d={dashboardData} />
+            <DashboardKunjunganSection d={dashboardData} />
+            <DashboardPenyakitSection d={dashboardData} />
+            <DashboardNakesSection
+              d={dashboardData}
+              onDeleteItems={handleDeleteItems}
+            />
 
-        <Section title="Ringkasan AI">
-          <AiSummary
-            key={puskesmas}
-            puskesmasNama={dashboardData.nama}
-            periodeLabel={periodeLabel}
-            onGenerate={handleGenerateSummary}
-          />
-        </Section>
-      </main>
+            <Section title="Ringkasan AI">
+              <AiSummary
+                key={puskesmas}
+                puskesmasNama={dashboardData.nama}
+                periodeLabel={periodeLabel}
+                onGenerate={handleGenerateSummary}
+              />
+            </Section>
+          </main>
+        </>
+      )}
 
       <NakesUploadDrawer
         userRole={user.role as "DINKES" | "PUSKESMAS"}
