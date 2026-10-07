@@ -1,8 +1,11 @@
 import { CACHE_TTL_TODAY, CACHE_TTL_PAST } from "./config";
 
 export function getCacheTTL(dateStr: string): number {
-  const todayStr = new Date().toISOString().split("T")[0];
-  return dateStr === todayStr ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
+  const todayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+  }).format(new Date());
+
+  return dateStr >= todayStr ? CACHE_TTL_TODAY : CACHE_TTL_PAST;
 }
 
 export async function mapConcurrent<T, R>(
@@ -31,7 +34,7 @@ export async function mapConcurrent<T, R>(
 export function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
-  timeoutMs = 2000,
+  timeoutMs = 6000,
 ): Promise<Response> {
   const controller = new AbortController();
 

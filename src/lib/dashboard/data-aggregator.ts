@@ -12,6 +12,9 @@ export type { AggregatedDailyRow, AggregatedEwsRow, AggregateMaps };
 
 function classifyDisease(name: string): "dbd" | "diare" | "ispa" | null {
   const lower = name.toLowerCase();
+
+  if (lower.includes("tuberculosis") || lower.includes("tubercul")) return null;
+
   if (
     lower.includes("dbd") ||
     lower.includes("dengue") ||
@@ -20,6 +23,7 @@ function classifyDisease(name: string): "dbd" | "diare" | "ispa" | null {
     lower.includes("berdarah")
   )
     return "dbd";
+
   if (
     lower.includes("diare") ||
     lower.includes("diarrhoea") ||
@@ -29,6 +33,7 @@ function classifyDisease(name: string): "dbd" | "diare" | "ispa" | null {
     lower.includes("dehidrasi")
   )
     return "diare";
+
   if (
     lower.includes("ispa") ||
     lower.includes("pharyngitis") ||
@@ -37,14 +42,23 @@ function classifyDisease(name: string): "dbd" | "diare" | "ispa" | null {
     lower.includes("influenza") ||
     lower.includes("cough") ||
     lower.includes("batuk") ||
-    lower.includes("flu") ||
+    /\bflu\b/.test(lower) || 
     lower.includes("nasopharyngitis") ||
-    lower.includes("tonsilitis") ||
+    lower.includes("tonsillitis") || 
+    lower.includes("tonsilitis") || 
     lower.includes("laringitis") ||
+    lower.includes("laryngitis") || 
     lower.includes("sinusitis") ||
-    lower.includes("faringitis")
+    lower.includes("faringitis") ||
+    lower.includes("pneumonia") || 
+    lower.includes("pulmonary") || 
+    lower.includes("bronchitis") || 
+    lower.includes("bronchiolitis") ||
+    lower.includes("asthma") ||
+    /\basma\b/.test(lower)
   )
     return "ispa";
+
   return null;
 }
 

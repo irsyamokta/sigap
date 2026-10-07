@@ -88,14 +88,18 @@ export async function fetchDailyPuskesmasData(
     result = null;
   }
 
+  let isFallback = false;
   if (!result) {
     result = generateFallbackDailyItem(code, dateStr, staticInfo);
+    isFallback = true;
   }
 
-  dailyDataCache.set(cacheKey, {
-    data: result,
-    expiresAt: now + getCacheTTL(dateStr),
-  });
+  if (!isFallback) {
+    dailyDataCache.set(cacheKey, {
+      data: result,
+      expiresAt: now + getCacheTTL(dateStr),
+    });
+  }
 
   return result;
 }

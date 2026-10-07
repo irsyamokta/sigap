@@ -34,5 +34,5 @@ export const TARGET_PUSKESMAS_CODES: SupportedPuskesmasId[] = [
 ];
 
 export const CACHE_TTL_PAST = 24 * 60 * 60 * 1000; // 24 hours for historical data
-export const CACHE_TTL_TODAY = 10 * 60 * 1000; // 10 minutes for current day
+export const CACHE_TTL_TODAY = 2 * 60 * 1000; // 2 minutes for current day
 export const CACHE_TTL_STATIC = 60 * 60 * 1000; // 1 hour for static info
