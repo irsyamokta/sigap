@@ -27,7 +27,9 @@ export interface NakesRatioItem {
   puskesmasNama: string;
   jenisNakes: string;
   kebutuhan: number;
+  tersedia: number;
   jumlahPenduduk: number;
   ratio: number;
+  targetRatio: number | null;
   tanggalPengajuan?: string;
 }

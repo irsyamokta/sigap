@@ -241,7 +241,7 @@ export function DashboardNakesSection({
           </div>
 
           <Panel
-            title="Analisis Berdasarkan Standar Tenaga Kesehatan"
+            title="Analisis Berdasarkan Target Rasio Tenaga Kesehatan"
             className="flex-1 min-w-0 flex flex-col justify-between"
           >
             <StandarTenagaChart data={d.standarTenaga} />

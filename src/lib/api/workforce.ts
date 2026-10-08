@@ -5,14 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUserFn } from "@/lib/auth";
 import type { PuskesmasWorkforceData, WorkforceItem } from "@/types/workforce";
 import {
-  DEFAULT_BASELINE_WORKFORCE,
   getMergedWorkforceData,
   buildNakesRatiosFromSubmissions,
 } from "./workforce-baseline";
 
 export type { PuskesmasWorkforceData, WorkforceItem };
 export {
-  DEFAULT_BASELINE_WORKFORCE,
   getMergedWorkforceData,
   buildNakesRatiosFromSubmissions,
 };

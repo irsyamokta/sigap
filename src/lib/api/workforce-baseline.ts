@@ -4,54 +4,11 @@ import type {
   NakesRatioItem,
 } from "@/types/workforce";
 import type { PuskesmasId } from "@/types/dashboard";
-import { fetchPopulationData, calculateNakesRatio } from "@/lib/api/population";
-
-export const DEFAULT_BASELINE_WORKFORCE: Record<string, WorkforceItem[]> = {
-  purwokerto_barat: [
-    { jenisNakes: "Dokter", tersedia: 4, kebutuhan: 12 },
-    { jenisNakes: "Dokter Gigi", tersedia: 2, kebutuhan: 4 },
-    { jenisNakes: "Perawat", tersedia: 14, kebutuhan: 20 },
-    { jenisNakes: "Bidan", tersedia: 6, kebutuhan: 10 },
-    { jenisNakes: "Farmasi", tersedia: 2, kebutuhan: 4 },
-    { jenisNakes: "Kesmas", tersedia: 3, kebutuhan: 5 },
-    { jenisNakes: "Kesling", tersedia: 2, kebutuhan: 3 },
-    { jenisNakes: "Gizi", tersedia: 2, kebutuhan: 3 },
-    { jenisNakes: "Teklabmed", tersedia: 2, kebutuhan: 4 },
-  ],
-  patikraja: [
-    { jenisNakes: "Dokter", tersedia: 5, kebutuhan: 14 },
-    { jenisNakes: "Dokter Gigi", tersedia: 2, kebutuhan: 5 },
-    { jenisNakes: "Perawat", tersedia: 16, kebutuhan: 24 },
-    { jenisNakes: "Bidan", tersedia: 8, kebutuhan: 12 },
-    { jenisNakes: "Farmasi", tersedia: 3, kebutuhan: 5 },
-    { jenisNakes: "Kesmas", tersedia: 4, kebutuhan: 6 },
-    { jenisNakes: "Kesling", tersedia: 2, kebutuhan: 4 },
-    { jenisNakes: "Gizi", tersedia: 2, kebutuhan: 4 },
-    { jenisNakes: "Teklabmed", tersedia: 2, kebutuhan: 4 },
-  ],
-  sokaraja_1: [
-    { jenisNakes: "Dokter", tersedia: 8, kebutuhan: 20 },
-    { jenisNakes: "Dokter Gigi", tersedia: 3, kebutuhan: 6 },
-    { jenisNakes: "Perawat", tersedia: 24, kebutuhan: 36 },
-    { jenisNakes: "Bidan", tersedia: 12, kebutuhan: 18 },
-    { jenisNakes: "Farmasi", tersedia: 4, kebutuhan: 7 },
-    { jenisNakes: "Kesmas", tersedia: 5, kebutuhan: 8 },
-    { jenisNakes: "Kesling", tersedia: 3, kebutuhan: 5 },
-    { jenisNakes: "Gizi", tersedia: 3, kebutuhan: 5 },
-    { jenisNakes: "Teklabmed", tersedia: 3, kebutuhan: 5 },
-  ],
-  kembaran_1: [
-    { jenisNakes: "Dokter", tersedia: 6, kebutuhan: 18 },
-    { jenisNakes: "Dokter Gigi", tersedia: 2, kebutuhan: 5 },
-    { jenisNakes: "Perawat", tersedia: 20, kebutuhan: 32 },
-    { jenisNakes: "Bidan", tersedia: 10, kebutuhan: 16 },
-    { jenisNakes: "Farmasi", tersedia: 3, kebutuhan: 6 },
-    { jenisNakes: "Kesmas", tersedia: 4, kebutuhan: 7 },
-    { jenisNakes: "Kesling", tersedia: 2, kebutuhan: 4 },
-    { jenisNakes: "Gizi", tersedia: 2, kebutuhan: 4 },
-    { jenisNakes: "Teklabmed", tersedia: 2, kebutuhan: 4 },
-  ],
-};
+import {
+  fetchPopulationData,
+  calculateNakesRatio,
+  getTargetRatio,
+} from "@/lib/api/population";
 
 export function normalizeNakesProfesi(rawName: string): string {
   const clean = rawName.trim();
@@ -66,21 +23,27 @@ export function normalizeNakesProfesi(rawName: string): string {
     lower.includes("kefarmasian") ||
     lower.includes("apoteker")
   )
-    return "Farmasi";
-  if (lower.includes("kesmas") || lower.includes("masyarakat")) return "Kesmas";
+    return "Tenaga Kefarmasian";
+  if (
+    lower.includes("kesmas") ||
+    lower.includes("promosi kesehatan") ||
+    lower.includes("masyarakat")
+  )
+    return "Promosi Kesehatan";
   if (
     lower.includes("kesling") ||
     lower.includes("lingkungan") ||
     lower.includes("sanitarian")
   )
-    return "Kesling";
-  if (lower.includes("gizi") || lower.includes("nutrisionis")) return "Gizi";
+    return "Tenaga Kesehatan Lingkungan";
+  if (lower.includes("gizi") || lower.includes("nutrisionis"))
+    return "Tenaga Gizi";
   if (
     lower.includes("teklabmed") ||
     lower.includes("laboratorium") ||
     lower.includes("atlm")
   )
-    return "Teklabmed";
+    return "ATLM";
   return clean;
 }
 
@@ -97,39 +60,30 @@ export function getMergedWorkforceData(
   const map = new Map<string, { tersedia: number; kebutuhan: number }>();
 
   for (const code of targetCodes) {
-    const defaultBaseline = DEFAULT_BASELINE_WORKFORCE[code] ?? [];
     const apiBaseline = apiNakesBaselines?.[code];
-
-    let baselineItems: WorkforceItem[] = defaultBaseline;
-    if (apiBaseline && apiBaseline.length > 0) {
-      baselineItems = apiBaseline.map((apiItem) => {
-        const canonicalName = normalizeNakesProfesi(apiItem.profesi);
-        const def = defaultBaseline.find(
-          (d) => normalizeNakesProfesi(d.jenisNakes) === canonicalName,
-        );
-        return {
-          jenisNakes: canonicalName,
-          tersedia: apiItem.jumlah,
-          kebutuhan: def
-            ? def.kebutuhan
-            : Math.max(apiItem.jumlah, Math.round(apiItem.jumlah * 1.5)),
-        };
-      });
-    }
-
     const submission = activeSubmissions.find((s) => s.puskesmasCode === code);
 
-    for (const baseItem of baselineItems) {
-      const key = normalizeNakesProfesi(baseItem.jenisNakes);
-      const tersedia = baseItem.tersedia;
-      const kebutuhan = baseItem.kebutuhan;
+    // Prioritas: data dari upload Excel (submission), lalu API baseline
+    let items: WorkforceItem[] = [];
 
+    if (submission && submission.items.length > 0) {
+      items = submission.items;
+    } else if (apiBaseline && apiBaseline.length > 0) {
+      items = apiBaseline.map((apiItem) => ({
+        jenisNakes: normalizeNakesProfesi(apiItem.profesi),
+        tersedia: apiItem.jumlah,
+        kebutuhan: Math.max(apiItem.jumlah, Math.round(apiItem.jumlah * 1.5)),
+      }));
+    }
+
+    for (const item of items) {
+      const key = normalizeNakesProfesi(item.jenisNakes);
       const existing = map.get(key);
       if (existing) {
-        existing.tersedia += tersedia;
-        existing.kebutuhan += kebutuhan;
+        existing.tersedia += item.tersedia;
+        existing.kebutuhan += item.kebutuhan;
       } else {
-        map.set(key, { tersedia, kebutuhan });
+        map.set(key, { tersedia: item.tersedia, kebutuhan: item.kebutuhan });
       }
     }
   }
@@ -151,7 +105,8 @@ export async function buildNakesRatiosFromSubmissions(
     for (const item of sub.items) {
       if (item.kebutuhan <= 0 && item.tersedia <= 0) continue;
       const canonicalName = normalizeNakesProfesi(item.jenisNakes);
-      const ratio = calculateNakesRatio(item.kebutuhan, pop.jumlahPenduduk);
+      const ratio = calculateNakesRatio(item.tersedia, pop.jumlahPenduduk);
+      const targetRatio = getTargetRatio(canonicalName);
       result.push({
         id:
           item.id ||
@@ -162,8 +117,10 @@ export async function buildNakesRatiosFromSubmissions(
         puskesmasNama: pop.puskesmasNama,
         jenisNakes: canonicalName,
         kebutuhan: item.kebutuhan,
+        tersedia: item.tersedia,
         jumlahPenduduk: pop.jumlahPenduduk,
         ratio,
+        targetRatio,
         tanggalPengajuan: sub.submittedAt,
       });
     }

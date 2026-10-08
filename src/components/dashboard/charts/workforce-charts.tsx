@@ -31,23 +31,25 @@ const tooltipStyle = {
 
 const NAKES_SHORT_LABELS: Record<string, string> = {
   Dokter: "Dokter",
-  "Dokter Umum": "Dr. Umum",
-  "Dokter Gigi": "Dr. Gigi",
+  "Dokter Umum": "Dokter",
+  "Dokter Gigi": "Dokter Gigi",
   Perawat: "Perawat",
   Bidan: "Bidan",
-  Farmasi: "Farmasi",
-  "Tenaga Kefarmasian": "Farmasi",
-  Apoteker: "Farmasi",
-  Kesmas: "Kesmas",
-  "Tenaga Kesehatan Masyarakat": "Kesmas",
-  Kesling: "Kesling",
-  "Tenaga Kesehatan Lingkungan": "Kesling",
-  Sanitarian: "Kesling",
-  Gizi: "Gizi",
-  "Tenaga Gizi": "Gizi",
-  Nutrisionis: "Gizi",
-  Teklabmed: "Teklabmed",
+  "Tenaga Kefarmasian": "Tenaga Kefarmasian",
+  Farmasi: "Tenaga Kefarmasian",
+  Apoteker: "Tenaga Kefarmasian",
+  "Promosi Kesehatan": "Promosi Kesehatan",
+  Kesmas: "Promosi Kesehatan",
+  "Tenaga Kesehatan Masyarakat": "Promosi Kesehatan",
+  "Tenaga Kesehatan Lingkungan": "Tenaga Kes. Lingkungan",
+  Kesling: "Tenaga Kes. Lingkungan",
+  Sanitarian: "Tenaga Kes. Lingkungan",
+  "Tenaga Gizi": "Tenaga Gizi",
+  Gizi: "Tenaga Gizi",
+  Nutrisionis: "Tenaga Gizi",
+  ATLM: "ATLM",
   "Ahli Teknologi Laboratorium Medik": "ATLM",
+  Teklabmed: "ATLM",
 };
 
 export function TenagaBarChart({
@@ -95,6 +97,7 @@ export function TenagaBarChart({
     </ResponsiveContainer>
   );
 }
+
 interface StandarTenagaPayloadItem {
   dataKey: string;
   name: string;
@@ -210,7 +213,6 @@ export function RasioDonut({
   value,
   totalTenaga,
   totalKebutuhan,
-  keterangan,
 }: {
   value: number;
   totalTenaga?: number;
@@ -295,11 +297,6 @@ export function RasioDonut({
               {defisit > 0 ? `Defisit ${defisit} Nakes` : "Terpenuhi"}
             </span>
           </div>
-          {keterangan && (
-            <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
-              {keterangan}
-            </p>
-          )}
         </div>
       </div>
     </div>

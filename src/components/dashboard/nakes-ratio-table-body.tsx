@@ -29,7 +29,7 @@ export function NakesRatioTableBody({
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-xs">
       <table className="w-full text-left text-xs">
-        <thead className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
+"        <thead className="border-b border-border bg-muted/50 text-muted-foreground font-semibold">
           <tr>
             <th className="w-10 px-4 py-3 text-center">
               <Checkbox
@@ -48,13 +48,29 @@ export function NakesRatioTableBody({
             <th className="px-4 py-3">Kecamatan</th>
             <th className="px-4 py-3">Fasilitas Kesehatan</th>
             <th className="px-4 py-3">Jenis Nakes</th>
-            <th className="px-4 py-3 text-right">Jumlah Kebutuhan</th>
+            <th className="px-4 py-3 text-right">Tersedia</th>
+            <th className="px-4 py-3 text-right">Kebutuhan</th>
+            <th className="px-4 py-3 text-right">Penduduk</th>
+            <th className="px-4 py-3 text-right">Rasio / 1.000</th>
+            <th className="px-4 py-3 text-right">Target Rasio</th>
             <th className="w-12 px-3 py-3 text-center">Aksi</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border/60 font-medium">
           {paginatedItems.map((item) => {
             const isSelected = selectedIds.has(item.id);
+            const ratioFormatted =
+              item.ratio !== undefined && item.ratio !== null
+                ? item.ratio.toLocaleString("id-ID", {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 3,
+                  })
+                : "-";
+            const targetFormatted =
+              item.targetRatio !== null && item.targetRatio !== undefined
+                ? `${item.targetRatio} / 1.000`
+                : "1 / Faskes";
+
             return (
               <tr
                 key={item.id}
@@ -92,8 +108,20 @@ export function NakesRatioTableBody({
                 <td className="px-4 py-3 font-semibold text-primary">
                   {item.jenisNakes}
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-foreground">
-                  {nf.format(item.kebutuhan)}
+                <td className="px-4 py-3 text-right text-foreground">
+                  {nf.format(item.tersedia ?? 0)}
+                </td>
+                <td className="px-4 py-3 text-right text-foreground font-medium">
+                  {nf.format(item.kebutuhan ?? 0)}
+                </td>
+                <td className="px-4 py-3 text-right text-muted-foreground">
+                  {nf.format(item.jumlahPenduduk ?? 0)}
+                </td>
+                <td className="px-4 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                  {ratioFormatted}
+                </td>
+                <td className="px-4 py-3 text-right text-muted-foreground">
+                  {targetFormatted}
                 </td>
                 <td className="px-3 py-3 text-center">
                   <button
@@ -113,7 +141,7 @@ export function NakesRatioTableBody({
           {paginatedItems.length === 0 && (
             <tr>
               <td
-                colSpan={7}
+                colSpan={11}
                 className="py-12 text-center text-muted-foreground"
               >
                 <div className="flex flex-col items-center justify-center space-y-2">

@@ -135,14 +135,14 @@ export function NakesUploadDrawer({
   const downloadSampleTemplate = () => {
     const sampleData = [
       { "Jenis Nakes": "Dokter", "Jumlah Kebutuhan": 12 },
-      { "Jenis Nakes": "Dr. Gigi", "Jumlah Kebutuhan": 4 },
+      { "Jenis Nakes": "Dokter Gigi", "Jumlah Kebutuhan": 4 },
       { "Jenis Nakes": "Perawat", "Jumlah Kebutuhan": 30 },
       { "Jenis Nakes": "Bidan", "Jumlah Kebutuhan": 18 },
-      { "Jenis Nakes": "Farmasi", "Jumlah Kebutuhan": 5 },
-      { "Jenis Nakes": "Kesmas", "Jumlah Kebutuhan": 6 },
-      { "Jenis Nakes": "Kesling", "Jumlah Kebutuhan": 4 },
-      { "Jenis Nakes": "Gizi", "Jumlah Kebutuhan": 4 },
-      { "Jenis Nakes": "Teklabmed", "Jumlah Kebutuhan": 4 },
+      { "Jenis Nakes": "Tenaga Kefarmasian", "Jumlah Kebutuhan": 5 },
+      { "Jenis Nakes": "Promosi Kesehatan", "Jumlah Kebutuhan": 6 },
+      { "Jenis Nakes": "Tenaga Kesehatan Lingkungan", "Jumlah Kebutuhan": 4 },
+      { "Jenis Nakes": "Tenaga Gizi", "Jumlah Kebutuhan": 4 },
+      { "Jenis Nakes": "ATLM", "Jumlah Kebutuhan": 4 },
     ];
     const worksheet = XLSX.utils.json_to_sheet(sampleData);
     const workbook = XLSX.utils.book_new();

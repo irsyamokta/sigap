@@ -49,14 +49,34 @@ export async function fetchPopulationData(
 }
 
 /**
- * Rumus Perhitungan Ratio Nakes berdasarkan Jumlah Penduduk:
- * Ratio = (Jumlah Nakes Kebutuhan / Jumlah Penduduk) * 1.000
+ * Target rasio nakes per 1.000 penduduk berdasarkan Permenkes/SDMK Nasional.
+ * Promosi Kesehatan: 1 per faskes (tidak berbasis penduduk) → null.
+ */
+export const TARGET_RATIO_PER_1000: Record<string, number | null> = {
+  Dokter: 1,
+  "Dokter Gigi": 0.2,
+  Perawat: 2.4,
+  Bidan: 2,
+  "Tenaga Kefarmasian": 1,
+  "Promosi Kesehatan": null,
+  "Tenaga Gizi": 0.35,
+  "Tenaga Kesehatan Lingkungan": 0.21,
+  ATLM: 0.354,
+};
+
+export function getTargetRatio(jenisNakes: string): number | null {
+  return TARGET_RATIO_PER_1000[jenisNakes] ?? null;
+}
+
+/**
+ * Rumus Perhitungan Rasio Nakes:
+ * Rasio = (Jumlah Nakes Tersedia / Jumlah Penduduk) × 1.000
  */
 export function calculateNakesRatio(
-  kebutuhan: number,
+  tersedia: number,
   jumlahPenduduk: number,
 ): number {
   if (!jumlahPenduduk || jumlahPenduduk <= 0) return 0;
-  const ratio = (kebutuhan / jumlahPenduduk) * 1000;
-  return Number(ratio.toFixed(2));
+  const ratio = (tersedia / jumlahPenduduk) * 1000;
+  return Number(ratio.toFixed(3));
 }
