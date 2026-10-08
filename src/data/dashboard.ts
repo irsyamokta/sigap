@@ -36,6 +36,10 @@ async function fetchSimpusData(
 ): Promise<{
   dailyData: SimpusDailyItem[];
   nakesBaselines: Record<string, { profesi: string; jumlah: number }[]>;
+  kapasitasRawatInap?: Record<
+    string,
+    { isRawatInap: boolean; kapasitas: number }
+  >;
 }> {
   try {
     return await fetchSimpusDashboardDataFn({
@@ -85,7 +89,11 @@ export async function fetchDashboardData(
   const prevDatesSet = new Set(prevDaysToFetch);
 
   const [
-    { dailyData: allDailyData, nakesBaselines: apiNakesBaselines },
+    {
+      dailyData: allDailyData,
+      nakesBaselines: apiNakesBaselines,
+      kapasitasRawatInap: apiKapasitasRawatInap,
+    },
     activeSubmissions,
   ] = await Promise.all([
     fetchSimpusData(pId, allDatesToFetch),
@@ -185,21 +193,22 @@ export async function fetchDashboardData(
     total: selectedDailyMap?.get(isoDay) ?? 0,
   }));
 
-  const kapasitasPerPuskesmas = [
+  const targetCodes = [
     "purwokerto_barat",
     "patikraja",
     "sokaraja_1",
     "kembaran_1",
-  ].map((code) => {
-    const pData = allDailyData.find((item) => item.puskesmasId === code);
+  ] as const;
+
+  const kapasitasPerPuskesmas = targetCodes.map((code) => {
     const info = puskesmasList.find((item) => item.id === code);
+    const apiKap = apiKapasitasRawatInap?.[code];
     const isRawatInap =
-      pData?.rawatInap?.isRawatInap ??
+      apiKap?.isRawatInap ??
       (code === "purwokerto_barat" || code === "sokaraja_1");
-    const rawKap = pData?.rawatInap?.kapasitas;
     const kapasitas =
-      typeof rawKap === "number"
-        ? rawKap
+      typeof apiKap?.kapasitas === "number"
+        ? apiKap.kapasitas
         : code === "purwokerto_barat"
           ? 15
           : code === "sokaraja_1"

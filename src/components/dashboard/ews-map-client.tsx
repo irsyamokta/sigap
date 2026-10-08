@@ -1,9 +1,22 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { DashboardData } from "@/data/dashboard";
-import { Loader2 } from "lucide-react";
+import { Loader2, Layers } from "lucide-react";
+import { parseKmlToGeoJson } from "@/lib/kml-parser";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import batasDesaKml from "@/data/kml/batas_desa_kelurahan.kml?raw";
+import batasKabKml from "@/data/kml/batas_kabupaten (2).kml?raw";
+import kecBanyumasKml from "@/data/kml/kecbanyumas.kml?raw";
 
 interface EwsMapProps {
   data: DashboardData;
@@ -13,6 +26,8 @@ interface GeoJsonFeature {
   properties?: {
     name?: string;
     puskesmasCode?: string;
+    kecamatan?: string;
+    desa?: string;
   };
 }
 
@@ -22,6 +37,30 @@ interface EwsAlertItem {
   threshold: number;
   status: "SIAGA" | "WASPADA";
 }
+
+type KmlSourceKey = "desa" | "kabupaten" | "kecamatan";
+
+const TARGET_PUSKESMAS_CODES = [
+  "purwokerto_barat",
+  "patikraja",
+  "sokaraja_1",
+  "kembaran_1",
+];
+
+const KML_DATASETS: Record<KmlSourceKey, { label: string; raw: string }> = {
+  desa: {
+    label: "Batas Desa / Kelurahan",
+    raw: batasDesaKml,
+  },
+  kabupaten: {
+    label: "Batas Kabupaten",
+    raw: batasKabKml,
+  },
+  kecamatan: {
+    label: "Garis Kecamatan",
+    raw: kecBanyumasKml,
+  },
+};
 
 function getAreaAlerts(
   feature: GeoJsonFeature,
@@ -42,8 +81,40 @@ function getStatusFromAlerts(alerts: EwsAlertItem[]): "SIAGA" | "WASPADA" | "NOR
   return "WASPADA";
 }
 
-function buildTooltip(feature: GeoJsonFeature, data: DashboardData): string {
+function buildTooltip(
+  feature: GeoJsonFeature,
+  data: DashboardData,
+  dataset: KmlSourceKey,
+): string {
+  if (dataset === "kabupaten") {
+    return `
+      <div style="font-family:sans-serif;text-align:center;padding:4px 8px;min-width:140px">
+        <strong style="font-size:12px">Kabupaten Banyumas</strong><br/>
+        <span style="color:#2563eb;font-size:11px">Batas Administrasi Kabupaten</span>
+      </div>
+    `;
+  }
+
+  if (dataset === "kecamatan") {
+    const name = feature.properties?.name || "Batas Kecamatan";
+    return `
+      <div style="font-family:sans-serif;text-align:center;padding:4px 8px;min-width:140px">
+        <strong style="font-size:12px">${name}</strong><br/>
+        <span style="color:#0284c7;font-size:11px">Garis Batas Kecamatan</span>
+      </div>
+    `;
+  }
+
   const code = feature.properties?.puskesmasCode ?? "";
+
+  if (data.isDinkesView && !TARGET_PUSKESMAS_CODES.includes(code)) {
+    return "";
+  }
+
+  if (!data.isDinkesView && code !== data.pId) {
+    return "";
+  }
+
   const name = feature.properties?.name ?? code;
   const alerts = getAreaAlerts(feature, data);
   const overallStatus = getStatusFromAlerts(alerts);
@@ -66,10 +137,6 @@ function buildTooltip(feature: GeoJsonFeature, data: DashboardData): string {
     statusText = "<strong>NORMAL</strong> — Semua indikator aman";
   }
 
-  if (!data.isDinkesView && code !== data.pId) {
-    return "";
-  }
-
   return `
     <div style="font-family:sans-serif;text-align:center;padding:4px 8px;min-width:160px">
       <strong style="font-size:12px">${name}</strong><br/>
@@ -79,9 +146,7 @@ function buildTooltip(feature: GeoJsonFeature, data: DashboardData): string {
 }
 
 export function EwsMap({ data }: EwsMapProps) {
-  const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(
-    null,
-  );
+  const [selectedDataset, setSelectedDataset] = useState<KmlSourceKey>("desa");
   const [loading, setLoading] = useState(true);
 
   const dataRef = useRef<DashboardData>(data);
@@ -91,31 +156,73 @@ export function EwsMap({ data }: EwsMapProps) {
 
   const layersRef = useRef<{ feature: GeoJsonFeature; layer: L.Path }[]>([]);
 
-  useEffect(() => {
-    fetch("/data/banyumas.geojson")
-      .then((res) => res.json())
-      .then((geo) => {
-        setGeoData(geo);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to load geojson:", err);
-        setLoading(false);
-      });
+  const geoDataMap = useMemo(() => {
+    const result: Partial<Record<KmlSourceKey, GeoJSON.FeatureCollection>> = {};
+    try {
+      result.desa = parseKmlToGeoJson(batasDesaKml);
+      result.kabupaten = parseKmlToGeoJson(batasKabKml);
+      result.kecamatan = parseKmlToGeoJson(kecBanyumasKml);
+    } catch (err) {
+      console.error("Error parsing KML dataset:", err);
+    }
+    return result;
   }, []);
+
+  useEffect(() => {
+    if (geoDataMap[selectedDataset]) {
+      setLoading(false);
+    }
+  }, [geoDataMap, selectedDataset]);
+
+  const currentGeoData = geoDataMap[selectedDataset] ?? null;
 
   useEffect(() => {
     for (const { feature, layer } of layersRef.current) {
       layer.setStyle(computeStyle(feature, dataRef.current));
     }
-  }, [data]);
+  }, [data, selectedDataset]);
 
   function computeStyle(feature: GeoJsonFeature, d: DashboardData) {
+    if (selectedDataset === "kabupaten") {
+      return {
+        fillColor: "#3b82f6",
+        weight: 2.5,
+        opacity: 0.95,
+        color: "#2563eb",
+        dashArray: "",
+        fillOpacity: 0.2,
+      };
+    }
+
+    if (selectedDataset === "kecamatan") {
+      return {
+        fillColor: "#0284c7",
+        weight: 2,
+        opacity: 0.9,
+        color: "#0284c7",
+        dashArray: "4 3",
+        fillOpacity: 0,
+      };
+    }
+
     const code = feature.properties?.puskesmasCode ?? "";
-    const alerts = getAreaAlerts(feature, d);
-    const status = getStatusFromAlerts(alerts);
+    const isTargetPuskesmas = TARGET_PUSKESMAS_CODES.includes(code);
 
     if (d.isDinkesView) {
+      if (!isTargetPuskesmas) {
+        return {
+          fillColor: "#94a3b8",
+          weight: 0,
+          opacity: 0,
+          color: "transparent",
+          dashArray: "",
+          fillOpacity: 0,
+        };
+      }
+
+      const alerts = getAreaAlerts(feature, d);
+      const status = getStatusFromAlerts(alerts);
+
       let fillColor = "#22c55e";
       let fillOpacity = 0.45;
 
@@ -129,9 +236,9 @@ export function EwsMap({ data }: EwsMapProps) {
 
       return {
         fillColor,
-        weight: 2,
-        opacity: 1,
-        color: "white",
+        weight: 1.5,
+        opacity: 0.9,
+        color: "#ffffff",
         dashArray: "3",
         fillOpacity,
       };
@@ -141,13 +248,16 @@ export function EwsMap({ data }: EwsMapProps) {
       if (!isSelected) {
         return {
           fillColor: "#94a3b8",
-          weight: 1,
+          weight: 0,
           opacity: 0,
           color: "transparent",
           dashArray: "",
           fillOpacity: 0,
         };
       }
+
+      const alerts = getAreaAlerts(feature, d);
+      const status = getStatusFromAlerts(alerts);
 
       let fillColor = "#22c55e";
       let fillOpacity = 0.65;
@@ -164,7 +274,7 @@ export function EwsMap({ data }: EwsMapProps) {
         fillColor,
         weight: 2.5,
         opacity: 1,
-        color: "white",
+        color: "#ffffff",
         dashArray: "",
         fillOpacity,
       };
@@ -178,7 +288,7 @@ export function EwsMap({ data }: EwsMapProps) {
 
     layer.on({
       mouseover(e: L.LeafletMouseEvent) {
-        const html = buildTooltip(feature, dataRef.current);
+        const html = buildTooltip(feature, dataRef.current, selectedDataset);
         if (!html) return;
 
         if (!tooltip.current) {
@@ -193,7 +303,8 @@ export function EwsMap({ data }: EwsMapProps) {
 
         const code = feature.properties?.puskesmasCode ?? "";
         const d = dataRef.current;
-        const isVisible = d.isDinkesView || code === d.pId;
+        const isVisible =
+          selectedDataset !== "desa" || d.isDinkesView || code === d.pId;
         if (isVisible) {
           layer.setStyle({ weight: 3, opacity: 1 });
         }
@@ -217,19 +328,43 @@ export function EwsMap({ data }: EwsMapProps) {
     );
   }
 
-  if (!geoData) {
+  if (!currentGeoData) {
     return (
       <div className="flex h-[350px] w-full items-center justify-center rounded-xl border bg-muted/20">
-        <p className="text-sm text-muted-foreground">Gagal memuat data peta</p>
+        <p className="text-sm text-muted-foreground">Gagal memuat data peta KML</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border shadow-sm">
+    <div className="overflow-hidden rounded-xl border shadow-sm relative">
+      <div className="absolute top-3 right-3 z-[1000]">
+        <Select
+          value={selectedDataset}
+          onValueChange={(val) => {
+            layersRef.current = [];
+            setSelectedDataset(val as KmlSourceKey);
+          }}
+        >
+          <SelectTrigger className="h-9 w-auto min-w-[185px] gap-2 rounded-xl border border-input/80 bg-background/90 backdrop-blur-md px-3 text-xs font-semibold shadow-md transition-all hover:bg-background/100 focus:ring-2 focus:ring-primary/30">
+            <div className="flex items-center gap-2 truncate">
+              <Layers className="size-3.5 text-muted-foreground shrink-0" />
+              <SelectValue placeholder="Pilih Layer Peta" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="z-[2000] border-input/80 bg-background/95 backdrop-blur-md shadow-xl">
+            {Object.entries(KML_DATASETS).map(([key, item]) => (
+              <SelectItem key={key} value={key} className="text-xs font-medium cursor-pointer">
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <MapContainer
         center={[-7.445, 109.25]}
-        zoom={12}
+        zoom={11}
         scrollWheelZoom={false}
         className="h-[350px] w-full z-0"
       >
@@ -239,7 +374,8 @@ export function EwsMap({ data }: EwsMapProps) {
           className="map-tiles"
         />
         <GeoJSON
-          data={geoData}
+          key={selectedDataset}
+          data={currentGeoData}
           style={(feature) =>
             computeStyle(feature as GeoJsonFeature, dataRef.current)
           }
@@ -251,3 +387,5 @@ export function EwsMap({ data }: EwsMapProps) {
     </div>
   );
 }
+
+

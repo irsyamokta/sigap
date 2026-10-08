@@ -45,7 +45,7 @@ export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
           : TARGET_PUSKESMAS_CODES;
 
     const staticResults = await Promise.all(
-      selectedCodes.map((code) =>
+      TARGET_PUSKESMAS_CODES.map((code) =>
         fetchPuskesmasStaticInfo(code, baseUrl, headers),
       ),
     );
@@ -62,11 +62,24 @@ export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
       string,
       { profesi: string; jumlah: number }[]
     > = {};
+    const kapasitasRawatInap: Record<
+      SupportedPuskesmasId,
+      { isRawatInap: boolean; kapasitas: number }
+    > = {
+      purwokerto_barat: { isRawatInap: true, kapasitas: 15 },
+      patikraja: { isRawatInap: false, kapasitas: 0 },
+      sokaraja_1: { isRawatInap: true, kapasitas: 20 },
+      kembaran_1: { isRawatInap: false, kapasitas: 0 },
+    };
 
     for (const res of staticResults) {
       if (res) {
         staticInfoMap.set(res.code, res);
         nakesBaselines[res.code] = res.nakes;
+        kapasitasRawatInap[res.code] = {
+          isRawatInap: res.isRawatInap,
+          kapasitas: res.kapasitas,
+        };
       }
     }
 
@@ -92,5 +105,5 @@ export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
       );
     });
 
-    return { dailyData, nakesBaselines };
+    return { dailyData, nakesBaselines, kapasitasRawatInap };
   });

@@ -29,4 +29,8 @@ export interface SimpusDailyItem {
 export interface SimpusDashboardDataResponse {
   dailyData: SimpusDailyItem[];
   nakesBaselines: Record<string, { profesi: string; jumlah: number }[]>;
+  kapasitasRawatInap?: Record<
+    SupportedPuskesmasId,
+    { isRawatInap: boolean; kapasitas: number }
+  >;
 }
