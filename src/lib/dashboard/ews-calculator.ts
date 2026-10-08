@@ -1,25 +1,64 @@
 import type { EwsAlert, PuskesmasId } from "@/types/dashboard";
-
-const PUSKESMAS_THRESHOLDS: Record<
-  string,
-  { dbd: number; diare: number; ispa: number }
-> = {
-  purwokerto_barat: { dbd: 13, diare: 27, ispa: 55 },
-  sokaraja_1: { dbd: 11, diare: 20, ispa: 47 },
-  patikraja: { dbd: 6, diare: 10, ispa: 22 },
-  kembaran_1: { dbd: 8, diare: 13, ispa: 30 },
-};
-
-const ALL_THRESHOLDS = { dbd: 28, diare: 55, ispa: 120 };
+import type { EwsBaseline } from "@/lib/api/simpus/services/ews-baseline.service";
 
 const DISEASE_NAMES = { dbd: "DBD", diare: "Diare", ispa: "ISPA" };
 
+type EwsThresholds = { dbd: number; diare: number; ispa: number };
+
+function extractPuskesmasThreshold(
+  pid: string,
+  baselineMap?: Record<string, EwsBaseline> | null,
+): EwsThresholds {
+  if (baselineMap && baselineMap[pid]) {
+    const b = baselineMap[pid];
+    return {
+      dbd: Math.max(0, Math.round(b.dbd.siaga * 10) / 10),
+      diare: Math.max(0, Math.round(b.diare.siaga * 10) / 10),
+      ispa: Math.max(0, Math.round(b.ispa.siaga * 10) / 10),
+    };
+  }
+  return { dbd: 0, diare: 0, ispa: 0 };
+}
+
+function extractAllThresholds(
+  baselineMap?: Record<string, EwsBaseline> | null,
+): EwsThresholds {
+  if (baselineMap) {
+    let totalDbd = 0;
+    let totalDiare = 0;
+    let totalIspa = 0;
+    let count = 0;
+    for (const key of Object.keys(baselineMap)) {
+      const b = baselineMap[key as keyof typeof baselineMap];
+      if (b && b.dbd) {
+        totalDbd += b.dbd.siaga;
+        totalDiare += b.diare.siaga;
+        totalIspa += b.ispa.siaga;
+        count++;
+      }
+    }
+    if (count > 0) {
+      return {
+        dbd: Math.round(totalDbd * 10) / 10,
+        diare: Math.round(totalDiare * 10) / 10,
+        ispa: Math.round(totalIspa * 10) / 10,
+      };
+    }
+  }
+  return { dbd: 0, diare: 0, ispa: 0 };
+}
+
 function checkAlerts(
   data: { dbd: number; diare: number; ispa: number },
-  thr: { dbd: number; diare: number; ispa: number },
+  thr: EwsThresholds,
 ): EwsAlert[] {
+  if (thr.dbd === 0 && thr.diare === 0 && thr.ispa === 0) {
+    return [];
+  }
+
   const alerts: EwsAlert[] = [];
   const check = (label: string, kasus: number, threshold: number) => {
+    if (threshold <= 0) return;
     if (kasus > threshold) {
       alerts.push({ penyakit: label, kasus, threshold, status: "SIAGA" });
     } else if (kasus > threshold * 0.85) {
@@ -34,15 +73,16 @@ function checkAlerts(
 
 function getPeakData(
   pEwsMap: Map<string, { dbd: number; diare: number; ispa: number }>,
-  thr: { dbd: number; diare: number; ispa: number },
+  thr: EwsThresholds,
 ): { dbd: number; diare: number; ispa: number } | undefined {
+  if (thr.dbd === 0 && thr.diare === 0 && thr.ispa === 0) return undefined;
   let peak: { dbd: number; diare: number; ispa: number } | undefined;
   let peakScore = -1;
   for (const [, weekData] of pEwsMap.entries()) {
     const score =
-      weekData.dbd / thr.dbd +
-      weekData.diare / thr.diare +
-      weekData.ispa / thr.ispa;
+      (thr.dbd > 0 ? weekData.dbd / thr.dbd : 0) +
+      (thr.diare > 0 ? weekData.diare / thr.diare : 0) +
+      (thr.ispa > 0 ? weekData.ispa / thr.ispa : 0);
     if (score > peakScore) {
       peakScore = score;
       peak = weekData;
@@ -61,12 +101,12 @@ export function computeEwsMetrics(
     Map<string, { dbd: number; diare: number; ispa: number }>
   >,
   pId: PuskesmasId,
+  baselineMap?: Record<string, EwsBaseline> | null,
 ) {
   const isAll = pId === "all";
 
-  const trendThr = isAll
-    ? ALL_THRESHOLDS
-    : (PUSKESMAS_THRESHOLDS[pId] ?? ALL_THRESHOLDS);
+  const allThr = extractAllThresholds(baselineMap);
+  const trendThr = isAll ? allThr : extractPuskesmasThreshold(pId, baselineMap);
 
   const ewsTren = Array.from(ewsMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
@@ -83,7 +123,7 @@ export function computeEwsMetrics(
 
   const puskesmasAlerts: Record<string, EwsAlert[]> = {};
   for (const [pid, pEwsMap] of perPuskesmasEwsMap.entries()) {
-    const thr = PUSKESMAS_THRESHOLDS[pid] ?? ALL_THRESHOLDS;
+    const thr = extractPuskesmasThreshold(pid, baselineMap);
     const peak = getPeakData(pEwsMap, thr);
     if (peak) {
       puskesmasAlerts[pid] = checkAlerts(peak, thr);
@@ -97,7 +137,7 @@ export function computeEwsMetrics(
       const latest = ewsTren[ewsTren.length - 1];
       ewsAlerts = checkAlerts(
         { dbd: latest.dbd, diare: latest.diare, ispa: latest.ispa },
-        ALL_THRESHOLDS,
+        allThr,
       );
     }
   } else {

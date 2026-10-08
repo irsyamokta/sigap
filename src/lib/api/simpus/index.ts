@@ -12,6 +12,7 @@ import { mapConcurrent } from "./utils";
 import { getSimpusToken } from "./auth";
 import { fetchPuskesmasStaticInfo } from "./services/static-info.service";
 import { fetchDailyPuskesmasData } from "./services/daily-data.service";
+import { getEwsBaseline } from "./services/ews-baseline.service";
 
 export type {
   SupportedPuskesmasId,
@@ -24,8 +25,8 @@ export { TARGET_PUSKESMAS, TARGET_PUSKESMAS_CODES } from "./config";
 export { getSimpusToken } from "./auth";
 export { fetchPuskesmasStaticInfo } from "./services/static-info.service";
 export { fetchDailyPuskesmasData } from "./services/daily-data.service";
-export { generateFallbackDailyItem } from "./fallback";
 export { dailyDataCache, staticInfoCache } from "./cache";
+export type { EwsBaseline, DiseaseThreshold } from "./services/ews-baseline.service";
 
 export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
   .validator(z.object({ puskesmasId: z.string(), dates: z.array(z.string()) }))
@@ -107,3 +108,13 @@ export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
 
     return { dailyData, nakesBaselines, kapasitasRawatInap };
   });
+
+export const fetchEwsBaselineFn = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const baseUrl =
+      process.env.BASE_URL || "https://simpus.banyumaskab.go.id/api_telkom/v1";
+    const token = await getSimpusToken();
+    const headers = { Authorization: `Bearer ${token}` };
+    return getEwsBaseline(baseUrl, headers);
+  },
+);

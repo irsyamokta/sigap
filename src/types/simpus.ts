@@ -1,5 +1,8 @@
 export type SupportedPuskesmasId =
-  "purwokerto_barat" | "patikraja" | "sokaraja_1" | "kembaran_1";
+  | "purwokerto_barat"
+  | "patikraja"
+  | "sokaraja_1"
+  | "kembaran_1";
 
 export interface SimpusPuskesmasInfo {
   simpusId: string;
@@ -7,8 +10,14 @@ export interface SimpusPuskesmasInfo {
   kecamatan: string;
 }
 
+export interface PenyakitEntry {
+  kode: string;
+  nama: string;
+  total: number;
+}
+
 export interface SimpusDailyItem {
-  date: string; // YYYY-MM-DD
+  date: string;
   puskesmasId: SupportedPuskesmasId;
   simpusId: string;
   puskesmasNama: string;
@@ -22,7 +31,7 @@ export interface SimpusDailyItem {
     pasien: number;
     kapasitas: number;
   };
-  penyakit: Record<string, number>; // diagnosa -> total kasus
+  penyakit: PenyakitEntry[];
   nakesBaseline?: { profesi: string; jumlah: number }[];
 }
 

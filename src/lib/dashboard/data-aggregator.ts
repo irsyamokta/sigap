@@ -1,72 +1,55 @@
 import { format, parseISO, startOfWeek, startOfMonth, subDays } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
-import type { SimpusDailyItem } from "@/types/simpus";
+import type { SimpusDailyItem, PenyakitEntry } from "@/types/simpus";
 import type { PuskesmasId } from "@/types/dashboard";
 import type {
   AggregatedDailyRow,
   AggregatedEwsRow,
   AggregateMaps,
 } from "@/types/aggregator";
+import { classifyDisease } from "@/lib/icd10-mapping";
 
 export type { AggregatedDailyRow, AggregatedEwsRow, AggregateMaps };
 
-function classifyDisease(name: string): "dbd" | "diare" | "ispa" | null {
-  const lower = name.toLowerCase();
+function computePenyakitDelta(items: SimpusDailyItem[]): SimpusDailyItem[] {
+  const lookup = new Map<string, PenyakitEntry[]>();
+  for (const item of items) {
+    lookup.set(`${item.puskesmasId}_${item.date}`, item.penyakit);
+  }
 
-  if (lower.includes("tuberculosis") || lower.includes("tubercul")) return null;
+  return items.map((item) => {
+    const date = parseISO(item.date);
+    const prevDate = format(subDays(date, 1), "yyyy-MM-dd");
+    const prevMonth = prevDate.substring(0, 7);
+    const currMonth = item.date.substring(0, 7);
 
-  if (
-    lower.includes("dbd") ||
-    lower.includes("dengue") ||
-    lower.includes("haemorrhagic") ||
-    lower.includes("hemorrhagic") ||
-    lower.includes("berdarah")
-  )
-    return "dbd";
+    const prevPenyakit = lookup.get(`${item.puskesmasId}_${prevDate}`);
+    if (!prevPenyakit || prevMonth !== currMonth) {
+      return item;
+    }
 
-  if (
-    lower.includes("diare") ||
-    lower.includes("diarrhoea") ||
-    lower.includes("diarrhea") ||
-    lower.includes("gastroenteritis") ||
-    lower.includes("disentri") ||
-    lower.includes("dehidrasi")
-  )
-    return "diare";
+    const prevMap = new Map<string, number>();
+    for (const entry of prevPenyakit) {
+      prevMap.set(entry.kode || entry.nama, entry.total);
+    }
 
-  if (
-    lower.includes("ispa") ||
-    lower.includes("pharyngitis") ||
-    lower.includes("respiratory") ||
-    lower.includes("rhinitis") ||
-    lower.includes("influenza") ||
-    lower.includes("cough") ||
-    lower.includes("batuk") ||
-    /\bflu\b/.test(lower) || 
-    lower.includes("nasopharyngitis") ||
-    lower.includes("tonsillitis") || 
-    lower.includes("tonsilitis") || 
-    lower.includes("laringitis") ||
-    lower.includes("laryngitis") || 
-    lower.includes("sinusitis") ||
-    lower.includes("faringitis") ||
-    lower.includes("pneumonia") || 
-    lower.includes("pulmonary") || 
-    lower.includes("bronchitis") || 
-    lower.includes("bronchiolitis") ||
-    lower.includes("asthma") ||
-    /\basma\b/.test(lower)
-  )
-    return "ispa";
+    const deltaEntries: PenyakitEntry[] = item.penyakit.map((entry) => {
+      const key = entry.kode || entry.nama;
+      const prevTotal = prevMap.get(key) ?? 0;
+      return { ...entry, total: Math.max(0, entry.total - prevTotal) };
+    });
 
-  return null;
+    return { ...item, penyakit: deltaEntries };
+  });
 }
 
 export function aggregateDailyData(
-  dailyData: SimpusDailyItem[],
+  rawDailyData: SimpusDailyItem[],
   startDate: Date,
   endDate: Date,
 ): AggregateMaps {
+  const dailyData = computePenyakitDelta(rawDailyData);
+
   const daysDiff =
     (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24);
   const groupBy = daysDiff > 30 ? "month" : "week";
@@ -91,29 +74,28 @@ export function aggregateDailyData(
     let diareInDay = 0;
     let ispaInDay = 0;
 
-    if (d.penyakit) {
-      for (const [namaPenyakit, kasus] of Object.entries(d.penyakit)) {
-        const jmlKasus = typeof kasus === "number" ? kasus : Number(kasus) || 0;
-        penyakitCount[namaPenyakit] =
-          (penyakitCount[namaPenyakit] ?? 0) + jmlKasus;
-        const category = classifyDisease(namaPenyakit);
-        if (category === "dbd") dbdInDay += jmlKasus;
-        else if (category === "diare") diareInDay += jmlKasus;
-        else if (category === "ispa") ispaInDay += jmlKasus;
-      }
+    for (const entry of d.penyakit) {
+      if (entry.total <= 0) continue;
+      penyakitCount[entry.nama] = (penyakitCount[entry.nama] ?? 0) + entry.total;
+
+      const category = classifyDisease(entry.kode, entry.nama);
+      if (category === "DBD") dbdInDay += entry.total;
+      else if (category === "Diare") diareInDay += entry.total;
+      else if (category === "ISPA") ispaInDay += entry.total;
     }
 
     const dDate = parseISO(d.date);
+    const weekStart = startOfWeek(dDate, { weekStartsOn: 1 });
+    const monthStart = startOfMonth(dDate);
+
     const timeKey =
       groupBy === "month"
-        ? format(startOfMonth(dDate), "yyyy-MM-dd")
-        : format(startOfWeek(dDate, { weekStartsOn: 1 }), "yyyy-MM-dd");
+        ? format(monthStart, "yyyy-MM-dd")
+        : format(weekStart, "yyyy-MM-dd");
     const timeLabel =
       groupBy === "month"
-        ? format(startOfMonth(dDate), "MMM yy", { locale: idLocale })
-        : format(startOfWeek(dDate, { weekStartsOn: 1 }), "dd MMM", {
-            locale: idLocale,
-          });
+        ? format(monthStart, "MMM yy", { locale: idLocale })
+        : format(weekStart, "dd MMM", { locale: idLocale });
 
     if (!trenMap.has(timeKey)) {
       trenMap.set(timeKey, {
@@ -132,12 +114,9 @@ export function aggregateDailyData(
     t.kapasitas += d.rawatInap.kapasitas;
     t.days += 1;
 
-    const ewsIsoKey = format(
-      startOfWeek(dDate, { weekStartsOn: 1 }),
-      "yyyy-MM-dd",
-    );
-    const ewsLabel = `Minggu ${format(startOfWeek(dDate, { weekStartsOn: 1 }), "dd MMM", { locale: idLocale })}`;
+    const ewsIsoKey = format(weekStart, "yyyy-MM-dd");
     if (!ewsMap.has(ewsIsoKey)) {
+      const ewsLabel = `Minggu ${format(weekStart, "dd MMM", { locale: idLocale })}`;
       ewsMap.set(ewsIsoKey, { label: ewsLabel, dbd: 0, diare: 0, ispa: 0 });
     }
     const e = ewsMap.get(ewsIsoKey)!;
@@ -147,23 +126,30 @@ export function aggregateDailyData(
 
     const pid = d.puskesmasId;
     const dayIsoKey = d.date;
-    const dayLabel = format(dDate, "dd MMM", { locale: idLocale });
-    if (!dailyMap.has(dayIsoKey))
-      dailyMap.set(dayIsoKey, { label: dayLabel, total: 0 });
+    if (!dailyMap.has(dayIsoKey)) {
+      dailyMap.set(dayIsoKey, {
+        label: format(dDate, "dd MMM", { locale: idLocale }),
+        total: 0,
+      });
+    }
     dailyMap.get(dayIsoKey)!.total += d.kunjungan.total;
 
-    if (!perPuskesmasDailyMap.has(pid))
+    if (!perPuskesmasDailyMap.has(pid)) {
       perPuskesmasDailyMap.set(pid, new Map());
+    }
     const pDailyMap = perPuskesmasDailyMap.get(pid)!;
     pDailyMap.set(
       dayIsoKey,
       (pDailyMap.get(dayIsoKey) ?? 0) + d.kunjungan.total,
     );
 
-    if (!perPuskesmasEwsMap.has(pid)) perPuskesmasEwsMap.set(pid, new Map());
+    if (!perPuskesmasEwsMap.has(pid)) {
+      perPuskesmasEwsMap.set(pid, new Map());
+    }
     const pEwsMap = perPuskesmasEwsMap.get(pid)!;
-    if (!pEwsMap.has(ewsIsoKey))
+    if (!pEwsMap.has(ewsIsoKey)) {
       pEwsMap.set(ewsIsoKey, { dbd: 0, diare: 0, ispa: 0 });
+    }
     const pE = pEwsMap.get(ewsIsoKey)!;
     pE.dbd += dbdInDay;
     pE.diare += diareInDay;
@@ -227,29 +213,30 @@ export function computeTrendPenyakit(
   prevPasienSakit: number,
   prevDaysCount: number,
 ): { trenPenyakit: string; trenPenyakitHint: string } {
-  const currentPeriodDays =
-    Math.max(
-      1,
-      Math.round(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24),
-      ),
-    ) || 30;
+  const currentPeriodDays = Math.max(
+    1,
+    Math.round(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24),
+    ),
+  );
 
   const prevRate = prevPasienSakit / (prevDaysCount || 1);
   const currRate = pasienSakit / (dailyDataLength || 1);
 
   let trenPenyakitPct = 0;
-  const trenPenyakit = (() => {
-    if (prevRate === 0 && currRate === 0) return "Stabil";
-    if (prevRate > 0) {
-      trenPenyakitPct = Number(
-        (((currRate - prevRate) / prevRate) * 100).toFixed(1),
-      );
-    }
-    if (currRate > prevRate * 1.05) return "Meningkat";
-    if (currRate < prevRate * 0.95) return "Menurun";
-    return "Stabil";
-  })();
+  let trenPenyakit = "Stabil";
+
+  if (prevRate > 0) {
+    trenPenyakitPct = Number(
+      (((currRate - prevRate) / prevRate) * 100).toFixed(1),
+    );
+  }
+
+  if (currRate > prevRate * 1.05) {
+    trenPenyakit = "Meningkat";
+  } else if (currRate < prevRate * 0.95) {
+    trenPenyakit = "Menurun";
+  }
 
   const trenPeriodLabel = `${currentPeriodDays} hari sebelumnya`;
   const trenPenyakitHint =
@@ -287,7 +274,8 @@ export function computeTopPuskesmas(
   if (pId === "all") {
     let maxTotal = -1;
     let topPid: PuskesmasId = "purwokerto_barat";
-    for (const p of puskesmasList.filter((item) => item.id !== "all")) {
+    for (const p of puskesmasList) {
+      if (p.id === "all") continue;
       const pDailyMap = perPuskesmasDailyMap.get(p.id);
       const totalVisits = pDailyMap
         ? Array.from(pDailyMap.values()).reduce((sum, v) => sum + v, 0)
@@ -316,7 +304,9 @@ export function buildPrevDatesRange(
   currentPeriodDays: number,
 ): string[] {
   const prevPeriodStart = subDays(startDate, currentPeriodDays);
-  return (
-    selectedDays.length > 31 ? selectedDays.slice(-31) : selectedDays
-  ).map((_, i) => format(subDays(prevPeriodStart, -i), "yyyy-MM-dd"));
+  const daysSlice =
+    selectedDays.length > 31 ? selectedDays.slice(-31) : selectedDays;
+  return daysSlice.map((_, i) =>
+    format(subDays(prevPeriodStart, -i), "yyyy-MM-dd"),
+  );
 }

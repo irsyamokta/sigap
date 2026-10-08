@@ -3,7 +3,11 @@ import {
   getNakesSubmissionsFn,
   buildNakesRatiosFromSubmissions,
 } from "@/lib/api/workforce";
-import { fetchSimpusDashboardDataFn, TARGET_PUSKESMAS } from "@/lib/api/simpus";
+import {
+  fetchSimpusDashboardDataFn,
+  fetchEwsBaselineFn,
+  TARGET_PUSKESMAS,
+} from "@/lib/api/simpus";
 
 import type { PuskesmasId, DashboardData } from "@/types/dashboard";
 import type { PuskesmasWorkforceData } from "@/types/workforce";
@@ -61,6 +65,15 @@ async function fetchActiveSubmissions(
   }
 }
 
+async function fetchEwsBaselineData() {
+  try {
+    return await fetchEwsBaselineFn();
+  } catch (err) {
+    console.error("Gagal mengambil EWS baseline SKDR:", err);
+    return null;
+  }
+}
+
 export async function fetchDashboardData(
   pId: PuskesmasId,
   startDate: Date,
@@ -95,9 +108,11 @@ export async function fetchDashboardData(
       kapasitasRawatInap: apiKapasitasRawatInap,
     },
     activeSubmissions,
+    ewsBaselineMap,
   ] = await Promise.all([
     fetchSimpusData(pId, allDatesToFetch),
     fetchActiveSubmissions(pId),
+    fetchEwsBaselineData(),
   ]);
 
   const dailyData = allDailyData.filter((d) => currentDatesSet.has(d.date));
@@ -141,6 +156,7 @@ export async function fetchDashboardData(
     ewsMap,
     perPuskesmasEwsMap,
     pId,
+    ewsBaselineMap,
   );
 
   const {

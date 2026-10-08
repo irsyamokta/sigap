@@ -34,7 +34,6 @@ export function EwsAlertBanner({ alerts }: EwsAlertBannerProps) {
       }`}
     >
       <div className="flex flex-wrap items-start gap-3">
-        {/* Icon */}
         <div
           className={`mt-0.5 flex-shrink-0 ${
             hasSiaga ? "text-red-500" : "text-amber-500"
@@ -47,7 +46,6 @@ export function EwsAlertBanner({ alerts }: EwsAlertBannerProps) {
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 space-y-1">
           <p
             className={`text-sm font-semibold ${
@@ -76,13 +74,12 @@ export function EwsAlertBanner({ alerts }: EwsAlertBannerProps) {
                       : "bg-amber-500"
                   }`}
                 />
-                {a.status} {a.penyakit}: {a.kasus} kasus (batas {a.threshold})
+                {a.status} {a.penyakit}: {a.kasus} Kasus
               </span>
             ))}
           </div>
         </div>
 
-        {/* Dismiss */}
         <button
           onClick={() => setDismissed(true)}
           className={`flex-shrink-0 rounded-lg p-1 transition-colors ${
@@ -98,8 +95,6 @@ export function EwsAlertBanner({ alerts }: EwsAlertBannerProps) {
     </div>
   );
 }
-
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
 
 interface EwsPayloadItem {
   dataKey: string;
@@ -146,12 +141,11 @@ interface EwsTrendChartProps {
 }
 
 export function EwsTrendChart({ data }: EwsTrendChartProps) {
-  // Find the threshold values (constant across all weeks scaled to puskesmas)
-  const thresholdDbd = data[0]?.thresholdDbd ?? 28;
-  const thresholdDiare = data[0]?.thresholdDiare ?? 55;
-  const thresholdIspa = data[0]?.thresholdIspa ?? 120;
 
-  // Max Y for domain
+  const thresholdDbd = data[0]?.thresholdDbd ?? 0;
+  const thresholdDiare = data[0]?.thresholdDiare ?? 0;
+  const thresholdIspa = data[0]?.thresholdIspa ?? 0;
+
   const maxVal = Math.max(
     ...data.flatMap((d) => [d.dbd, d.diare, d.ispa]),
     thresholdIspa,
@@ -189,55 +183,60 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
           )}
         />
 
-        {/* Danger zones above each threshold */}
-        <ReferenceArea
-          y1={thresholdDbd}
-          y2={Math.ceil(maxVal * 1.12)}
-          fill="#ef44441a"
-        />
+        {thresholdDbd > 0 && (
+          <ReferenceArea
+            y1={thresholdDbd}
+            y2={Math.ceil(maxVal * 1.12)}
+            fill="#ef44441a"
+          />
+        )}
 
-        {/* Threshold reference lines */}
-        <ReferenceLine
-          y={thresholdDbd}
-          stroke="#ef4444"
-          strokeDasharray="5 3"
-          strokeWidth={1.5}
-          label={{
-            value: `Batas DBD: ${thresholdDbd}`,
-            position: "insideBottomRight",
-            fontSize: 10,
-            fill: "#ef4444",
-            dy: -2,
-          }}
-        />
-        <ReferenceLine
-          y={thresholdDiare}
-          stroke="#f97316"
-          strokeDasharray="5 3"
-          strokeWidth={1.5}
-          label={{
-            value: `Batas Diare: ${thresholdDiare}`,
-            position: "insideTopRight",
-            fontSize: 10,
-            fill: "#f97316",
-            dy: -10,
-          }}
-        />
-        <ReferenceLine
-          y={thresholdIspa}
-          stroke="#eab308"
-          strokeDasharray="5 3"
-          strokeWidth={1.5}
-          label={{
-            value: `Batas ISPA: ${thresholdIspa}`,
-            position: "insideTopRight",
-            fontSize: 10,
-            fill: "#eab308",
-            dy: -12,
-          }}
-        />
+        {thresholdDbd > 0 && (
+          <ReferenceLine
+            y={thresholdDbd}
+            stroke="#ef4444"
+            strokeDasharray="5 3"
+            strokeWidth={1.5}
+            label={{
+              value: `Batas DBD: ${thresholdDbd}`,
+              position: "insideBottomRight",
+              fontSize: 10,
+              fill: "#ef4444",
+              dy: -2,
+            }}
+          />
+        )}
+        {thresholdDiare > 0 && (
+          <ReferenceLine
+            y={thresholdDiare}
+            stroke="#f97316"
+            strokeDasharray="5 3"
+            strokeWidth={1.5}
+            label={{
+              value: `Batas Diare: ${thresholdDiare}`,
+              position: "insideTopRight",
+              fontSize: 10,
+              fill: "#f97316",
+              dy: -10,
+            }}
+          />
+        )}
+        {thresholdIspa > 0 && (
+          <ReferenceLine
+            y={thresholdIspa}
+            stroke="#eab308"
+            strokeDasharray="5 3"
+            strokeWidth={1.5}
+            label={{
+              value: `Batas ISPA: ${thresholdIspa}`,
+              position: "insideTopRight",
+              fontSize: 10,
+              fill: "#eab308",
+              dy: -12,
+            }}
+          />
+        )}
 
-        {/* Actual case lines */}
         <Line
           type="monotone"
           dataKey="dbd"

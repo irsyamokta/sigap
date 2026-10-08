@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover";
 import { puskesmasList, type PuskesmasId } from "@/data/dashboard";
 import { id } from "date-fns/locale";
+import { subDays } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { logoutFn } from "@/lib/auth";
 
@@ -147,6 +148,9 @@ export function Navbar({
   const filterRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
+  const today = new Date();
+  const minDate = subDays(today, 364);
+
   const handleLogout = async () => {
     await logoutFn();
     router.invalidate();
@@ -213,6 +217,9 @@ export function Navbar({
                 locale={id}
                 initialFocus
                 className="pointer-events-auto p-3"
+                disabled={{ before: minDate, after: today }}
+                fromDate={minDate}
+                toDate={today}
               />
             </PopoverContent>
           </Popover>
@@ -305,6 +312,9 @@ export function Navbar({
                 locale={id}
                 initialFocus
                 className="pointer-events-auto"
+                disabled={{ before: minDate, after: today }}
+                fromDate={minDate}
+                toDate={today}
               />
               {user.role === "DINKES" && (
                 <>
