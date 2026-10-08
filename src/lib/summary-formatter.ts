@@ -1,6 +1,5 @@
 import type { DashboardData } from "@/types/dashboard";
 import { generateSummary } from "@/lib/ai.functions";
-import { puskesmasList } from "@/data/dashboard";
 
 const nf = new Intl.NumberFormat("id-ID");
 
@@ -8,51 +7,26 @@ export async function createAiDashboardSummary(
   d: DashboardData,
   periodeLabel: string,
 ) {
-  const ewsSummary =
-    d.ewsAlerts.length > 0
-      ? d.ewsAlerts
-          .map(
-            (a) =>
-              `[${a.status}] ${a.penyakit}: ${nf.format(a.kasus)} kasus (Threshold: ${nf.format(a.threshold)})`,
-          )
-          .join("; ")
-      : "Semua indikator EWS dalam batas aman (Normal).";
-
-  const pAlertsSummary =
-    d.isDinkesView && d.puskesmasAlerts
-      ? Object.entries(d.puskesmasAlerts)
-          .map(([pid, alerts]) => {
-            if (!alerts.length) return null;
-            const pName = puskesmasList.find((p) => p.id === pid)?.nama ?? pid;
-            return `${pName}: ${alerts.map((a) => `${a.penyakit} (${a.status}, ${nf.format(a.kasus)} kasus)`).join(", ")}`;
-          })
-          .filter(Boolean)
-          .join("; ")
-      : "";
-
-  const nakesDefisit = d.standarTenaga
-    .filter((s) => s.kebutuhan > s.tersedia)
+  const nakesDetail = d.standarTenaga
     .map(
       (s) =>
-        `${s.nama} (Tersedia ${s.tersedia} dari ${s.kebutuhan}, kurang ${s.kebutuhan - s.tersedia})`,
+        `- Profesi: ${s.nama} | Kebutuhan: ${nf.format(s.kebutuhan)} | Tersedia: ${nf.format(s.tersedia)} | Defisit: ${nf.format(Math.max(0, s.kebutuhan - s.tersedia))} | Status: ${s.tersedia >= s.kebutuhan ? "Terpenuhi" : "Defisit"}`,
     )
-    .join("; ");
+    .join("\n");
+
+  const puskesmasPalingMembutuhkan =
+    d.prioritasNakes.fullName && d.prioritasNakes.fullName !== "-"
+      ? `${d.prioritasNakes.fullName} (${d.prioritasNakes.keterangan})`
+      : d.prioritasPuskesmas && d.prioritasPuskesmas !== "-"
+        ? d.prioritasPuskesmas
+        : d.nama;
 
   const ringkasan = [
-    `Tampilan Wilayah: ${d.isDinkesView ? "Seluruh Puskesmas di Kab. Banyumas (Perspektif Dinkes)" : d.nama}`,
-    `Puskesmas Kunjungan Pasien Tertinggi: ${d.kunjunganPuskesmasNama} (${nf.format(d.totalKunjunganPuskesmas)} kunjungan)`,
-    `Total Pasien Sakit: ${nf.format(d.pasienSakit)} orang`,
-    `Total Pasien Sembuh: ${nf.format(d.pasienSembuh)} orang`,
-    `Tren Penyakit: ${d.trenPenyakit} (${d.trenPenyakitHint})`,
-    `10 Penyakit Teratas: ${d.penyakitTeratas.map((p, i) => `${i + 1}. ${p.nama} (${p.persen}%)`).join(", ")}`,
-    `Status Early Warning System (EWS) Wilayah: ${ewsSummary}`,
-    pAlertsSummary
-      ? `Detail Status Alert EWS per Puskesmas: ${pAlertsSummary}`
-      : "",
-    `Tenaga Kesehatan Terpasang: Total ${d.totalTenaga} dari kebutuhan ${d.totalKebutuhan} personel (Rasio kecukupan ${d.rasio}%)`,
-    `Prioritas Nakes (Fasilitas / Profesi): ${d.prioritasNakes.fullName} — ${d.prioritasNakes.keterangan}`,
-    `Rincian Profesi Nakes yang Kurang: ${nakesDefisit || "Semua profesi nakes telah memenuhi standar minimal"}`,
-    `Okupansi Perawatan Bulanan: ${d.okupansiRuang.map((o) => `${o.bulan} (${o.okupansi}%)`).join(", ")}`,
+    `Fasilitas / Wilayah Evaluasi: ${d.isDinkesView ? "Seluruh Puskesmas di Kab. Banyumas (Perspektif Dinkes)" : d.nama}`,
+    `Puskesmas Paling Membutuhkan Penambahan Nakes: ${puskesmasPalingMembutuhkan}`,
+    `Ringkasan Ketenagakerjaan Wilayah: Total Tersedia ${nf.format(d.totalTenaga)} dari Total Kebutuhan ${nf.format(d.totalKebutuhan)} personel (Rasio Kecukupan ${d.rasio}%)`,
+    `Prioritas Utama Profesi Nakes: ${d.prioritasTenagaKesehatan}`,
+    `Rincian Kebutuhan & Ketersediaan Nakes per Profesi:\n${nakesDetail}`,
   ]
     .filter(Boolean)
     .join("\n");

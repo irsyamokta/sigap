@@ -16,38 +16,36 @@ export const generateSummary = createServerFn({ method: "POST" })
     const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash"];
     let lastError = "";
 
-    const promptText = `Anda adalah Analis Data Sistem Informasi Kesehatan Senior di Dinas Kesehatan.
-Buat Laporan Ringkasan Eksekutif & Analisis Situasi Kesehatan yang RINGKAS, PADAT, SPESIFIK, dan BERDASARKAN DATA ANGKA.
+    const promptText = `Anda adalah Analis Data Ketenagakerjaan Kesehatan Senior di Dinas Kesehatan.
+Tugas Anda adalah membuat Laporan Evaluasi Tenaga Kesehatan & Action Plan yang KONSISTEN, BAKU, KETAT DATA, dan MENGGUNAKAN TABEL MARKDOWN.
 
-PETUNJUK UTAMA:
-- Tuliskan laporan secara padat, lugas, tajam (maksimal 350-400 kata total).
-- JANGAN menulis kalimat pembuka atau kata sambutan umum seperti "Berikut adalah...". LANGSUNG mulai dari judul "## 1. Ringkasan Kinerja & Beban Kunjungan".
-- JANGAN membuat kalimat penutup umum. PASTI KAN SELURUH 5 SECTION SELESAI DITULIS HINGGA POIN REKOMENDASI TERAKHIR TANPA TERPOTONG.
+PETUNJUK KONSISTENSI & STABILITAS RESPONSE:
+- Gunakan pola kalimat yang BAKU dan STABIL. DILARANG mengubah pola kalimat, header, nama kolom tabel, maupun struktur antar-generate.
+- DILARANG MEMBUAT BAHASAN TENTANG: Kunjungan Pasien, Tren Penyakit, Penyakit Teratas, Alert EWS, maupun Okupansi Perawatan.
+- TULIS HANYA 2 SEKSI UTAMA DENGAN STRUKTUR BERIKUT:
 
-Gunakan struktur 5 section berikut:
-## 1. Ringkasan Kinerja & Beban Kunjungan
-- Total kunjungan pasien & Puskesmas dengan kunjungan tertinggi beserta angkanya.
-- Pasien sakit, pasien sembuh, dan tren penyakit (dengan % perbandingan periode sebelumnya).
+## 1. Evaluasi Tenaga Kesehatan & Prioritas Kebutuhan
+Sebutkan informasi Puskesmas Paling Membutuhkan dengan kalimat baku persis seperti berikut:
+**Puskesmas Paling Membutuhkan Penambahan Nakes:** [Nama Puskesmas & Keterangan Defisit]
+ 
+| Jenis Nakes / Profesi | Kebutuhan | Tersedia | Selisih (Defisit) | Status Kecukupan | Prioritas Penambahan |
+| :--- | :---: | :---: | :---: | :---: | :--- |
 
-## 2. Analisis Penyakit Teratas & Alert EWS (Early Warning System)
-- Rincian penyakit terbanyak beserta persentasenya.
-- Status EWS spesifik: Sebutkan penyakit yang berstatus SIAGA atau WASPADA, jumlah kasus vs threshold/batas aman, dan nama puskesmas terkait.
+Sertakan ringkasan total ketersediaan vs kebutuhan dan persentase rasio kecukupan di bagian bawah tabel.
 
-## 3. Evaluasi Tenaga Kesehatan & Prioritas Kebutuhan
-- Rasio ketersediaan vs kebutuhan nakes saat ini.
-- Puskesmas atau Profesi yang menjadi **Prioritas Utama** penambahan nakes.
-- Rincian profesi nakes yang mengalami defisit personel.
+## 2. Rekomendasi Strategis & Action Plan
 
-## 4. Kapasitas & Okupansi Perawatan
-- Tingkat okupansi ruang perawatan dan tren bulanan.
+| No | Fokus / Profesi Target | Rekomendasi Strategis & Action Plan | Urgensi / Prioritas Execution |
+| :---: | :--- | :--- | :---: |
 
-## 5. Rekomendasi Strategis & Action Plan
-- 3-4 langkah konkret, realistis, dan berorientasi solusi berdasarkan EWS & defisit nakes di atas.
+ATURAN FORMAT MUTLAK:
+- DILARANG menulis kata pembuka/sambutan. LANGSUNG mulai dari "## 1. Evaluasi Tenaga Kesehatan & Prioritas Kebutuhan".
+- Sajikan seluruh evaluasi dan action plan dalam tabel markdown agar langsung dimengerti tanpa asumsi analisa tambahan.
 
-Analisis untuk: ${data.puskesmas}
+Analisis Ketenagakerjaan Untuk: ${data.puskesmas}
 Periode: ${data.periode}
 
-Data Mentah:
+Data Mentah Ketenagakerjaan:
 ${data.ringkasan}`;
 
     for (const model of models) {
@@ -60,7 +58,7 @@ ${data.ringkasan}`;
             body: JSON.stringify({
               contents: [{ parts: [{ text: promptText }] }],
               generationConfig: {
-                temperature: 0.3,
+                temperature: 0.0,
                 maxOutputTokens: 4096,
               },
             }),
