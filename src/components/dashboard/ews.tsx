@@ -198,7 +198,7 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
             strokeDasharray="5 3"
             strokeWidth={1.5}
             label={{
-              value: `Batas DBD: ${thresholdDbd}`,
+              value: `Batas DBD`,
               position: "insideBottomRight",
               fontSize: 10,
               fill: "#ef4444",
@@ -213,7 +213,7 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
             strokeDasharray="5 3"
             strokeWidth={1.5}
             label={{
-              value: `Batas Diare: ${thresholdDiare}`,
+              value: `Batas Diare`,
               position: "insideTopRight",
               fontSize: 10,
               fill: "#f97316",
@@ -228,7 +228,7 @@ export function EwsTrendChart({ data }: EwsTrendChartProps) {
             strokeDasharray="5 3"
             strokeWidth={1.5}
             label={{
-              value: `Batas ISPA: ${thresholdIspa}`,
+              value: `Batas ISPA`,
               position: "insideTopRight",
               fontSize: 10,
               fill: "#eab308",
