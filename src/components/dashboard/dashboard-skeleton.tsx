@@ -103,7 +103,7 @@ export function DashboardSkeleton() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+      {/* <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
         <Skeleton className="mb-4 h-4 w-60" />
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-12">
           <div className="rounded-xl border border-border bg-background/60 p-4 lg:col-span-3 flex flex-col justify-between">
@@ -162,7 +162,7 @@ export function DashboardSkeleton() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Section 6: Ringkasan AI */}
       <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">

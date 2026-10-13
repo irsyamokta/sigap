@@ -158,10 +158,10 @@ function Dashboard() {
             <DashboardEwsSection d={dashboardData} />
             <DashboardKunjunganSection d={dashboardData} />
             <DashboardPenyakitSection d={dashboardData} />
-            <DashboardNakesSection
+            {/* <DashboardNakesSection
               d={dashboardData}
               onDeleteItems={handleDeleteItems}
-            />
+            /> */}
 
             <Section title="Ringkasan AI">
               <AiSummary
