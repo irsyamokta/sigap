@@ -261,12 +261,12 @@ export function DashboardNakesSection({
         </Panel>
       </div>
 
-      <div className="mt-5 border-t border-border/60 pt-5">
+      {/* <div className="mt-5 border-t border-border/60 pt-5">
         <NakesRatioTable
           items={d.nakesRatios || []}
           onDeleteItems={onDeleteItems}
         />
-      </div>
+      </div> */}
     </Section>
   );
 }
