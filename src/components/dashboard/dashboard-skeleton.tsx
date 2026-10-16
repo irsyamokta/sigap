@@ -22,8 +22,8 @@ export function DashboardSkeleton() {
         <div className="mb-4 flex items-center gap-2">
           <Skeleton className="h-4 w-28" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
               className="rounded-xl border border-border bg-background/60 p-4"
@@ -45,24 +45,52 @@ export function DashboardSkeleton() {
           <Skeleton className="h-4 w-52" />
           <Skeleton className="h-5 w-36 rounded-full" />
         </div>
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div className="rounded-xl border border-border bg-background/60 p-4">
-            <Skeleton className="mb-4 h-4 w-44" />
-            <Skeleton className="h-[350px] w-full rounded-xl" />
-            <div className="mt-3 flex items-center gap-4">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-3 w-24" />
+        <div className="grid gap-5 grid-cols-1 lg:grid-cols-12">
+          <div className="rounded-xl border border-border bg-background/60 p-4 lg:col-span-7 xl:col-span-8 flex flex-col justify-between">
+            <div>
+              <Skeleton className="mb-4 h-4 w-44" />
+              <Skeleton className="h-[380px] w-full rounded-xl" />
+              <div className="mt-3 flex items-center gap-4">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-24" />
+              </div>
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-background/60 p-4">
-            <Skeleton className="mb-4 h-4 w-44" />
-            <Skeleton className="h-[350px] w-full rounded-xl" />
+          <div className="rounded-xl border border-border bg-background/60 p-4 lg:col-span-5 xl:col-span-4 flex flex-col justify-between">
+            <div>
+              <Skeleton className="mb-4 h-4 w-48" />
+              <div className="space-y-3">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-4 rounded-full" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                      <Skeleton className="h-3 w-8" />
+                    </div>
+                    <Skeleton className="h-1.5 w-full rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Skeleton className="mt-3 h-8 w-full rounded-lg" />
           </div>
         </div>
       </section>
 
-      {/* Section 3: Kunjungan Harian */}
+      {/* Section 3: Tren Mingguan Penyakit */}
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+        <div className="mb-4">
+          <Skeleton className="h-4 w-52" />
+        </div>
+        <div className="rounded-xl border border-border bg-background/60 p-4">
+          <Skeleton className="h-[350px] w-full rounded-xl" />
+        </div>
+      </section>
+
+      {/* Section 4: Kunjungan Harian */}
       <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
         <div className="mb-4">
           <Skeleton className="h-4 w-64" />
@@ -72,36 +100,16 @@ export function DashboardSkeleton() {
         </div>
       </section>
 
-      {/* Section 4: Kapasitas Rawat Inap & Penyakit */}
-      <div className="grid gap-5 lg:grid-cols-3">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] lg:col-span-2">
-          <Skeleton className="mb-3 h-4 w-56" />
-          <div className="mb-3 flex items-center gap-3">
-            <Skeleton className="h-5 w-40 rounded-full" />
-            <Skeleton className="h-5 w-32 rounded-full" />
-          </div>
-          <Skeleton className="h-[260px] w-full rounded-xl" />
-          <Skeleton className="mx-auto mt-2 h-3 w-64" />
-        </section>
-
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
-          <Skeleton className="mb-4 h-4 w-48" />
-          <div className="space-y-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-4 w-4 rounded-full" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                  <Skeleton className="h-3 w-8" />
-                </div>
-                <Skeleton className="h-1.5 w-full rounded-full" />
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+      {/* Section 5: Kapasitas Rawat Inap per Puskesmas */}
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+        <Skeleton className="mb-3 h-4 w-56" />
+        <div className="mb-3 flex items-center gap-3">
+          <Skeleton className="h-5 w-40 rounded-full" />
+          <Skeleton className="h-5 w-32 rounded-full" />
+        </div>
+        <Skeleton className="h-[260px] w-full rounded-xl" />
+        <Skeleton className="mx-auto mt-2 h-3 w-64" />
+      </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
         <Skeleton className="mb-4 h-4 w-60" />
@@ -135,7 +143,7 @@ export function DashboardSkeleton() {
           </div>
         </div>
 
-        <div className="mt-5 border-t border-border/60 pt-5 space-y-3">
+        {/* <div className="mt-5 border-t border-border/60 pt-5 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Skeleton className="h-9 w-64 rounded-lg" />
             <div className="flex gap-2">
@@ -161,7 +169,7 @@ export function DashboardSkeleton() {
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
       </section>
 
       {/* Section 6: Ringkasan AI */}

@@ -12,6 +12,7 @@ import { Section } from "@/components/dashboard/section";
 import {
   DashboardPasienSection,
   DashboardEwsSection,
+  DashboardTrenMingguanSection,
   DashboardKunjunganSection,
   DashboardPenyakitSection,
   DashboardNakesSection,
@@ -142,20 +143,21 @@ function Dashboard() {
       />
 
       {error ? (
-        <div className="mx-auto max-w-screen-2xl p-6 text-center text-destructive">
+        <div className="px-4 py-4 sm:px-6 text-center text-destructive">
           Gagal memuat data: {(error as Error).message}
         </div>
       ) : showSkeleton ? (
-        <main className="mx-auto max-w-screen-2xl space-y-5 px-3 py-4 sm:px-6 sm:py-6">
+        <main className="space-y-5 px-4 py-4 sm:px-6 sm:py-6">
           <DashboardSkeleton />
         </main>
       ) : (
         <>
           <DashboardAlertBanner alerts={dashboardData.ewsAlerts} />
 
-          <main className="mx-auto max-w-screen-2xl space-y-5 px-3 py-4 sm:px-6 sm:py-6">
+          <main className="space-y-5 px-4 py-4 sm:px-6 sm:py-6">
             <DashboardPasienSection d={dashboardData} />
             <DashboardEwsSection d={dashboardData} />
+            <DashboardTrenMingguanSection d={dashboardData} />
             <DashboardKunjunganSection d={dashboardData} />
             <DashboardPenyakitSection d={dashboardData} />
             <DashboardNakesSection

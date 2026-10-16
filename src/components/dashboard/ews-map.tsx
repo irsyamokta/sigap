@@ -8,7 +8,7 @@ const EwsMapClient = lazy(() =>
 
 export function EwsMapLegend() {
   return (
-    <div className="mt-3 rounded-lg border border-border/80 bg-muted/40 p-3">
+    <div className="mt-9 rounded-lg border border-border/80 bg-muted/40 p-3">
       <p className="mb-2 text-xs font-semibold text-foreground">
         Legenda Status Wilayah (EWS):
       </p>

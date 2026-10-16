@@ -28,7 +28,8 @@ export interface DashboardData {
   pasienSakitHint: string;
   trenPenyakit: string;
   trenPenyakitHint: string;
-  penyakitTeratas: { nama: string; persen: number }[];
+  penyakitTeratas: { nama: string; kasus?: number; persen: number }[];
+  totalKasusDiagnosis?: number;
   tenagaPerProfesi: { nama: string; jumlah: number }[];
   standarTenaga: { nama: string; tersedia: number; kebutuhan: number }[];
   totalTenaga: number;
@@ -49,6 +50,7 @@ export interface DashboardData {
   ewsTren: EwsTrendItem[];
   ewsAlerts: EwsAlert[];
   kunjunganHarian: { label: string; total: number }[];
+  totalKunjunganSemua: number;
   totalKunjunganPuskesmas: number;
   kunjunganPuskesmasNama: string;
   kunjunganPuskesmasId: PuskesmasId;

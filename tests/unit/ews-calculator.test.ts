@@ -17,9 +17,27 @@ describe("EWS Calculator Unit Tests (TC-EWS-001)", () => {
       label: "Minggu 40",
     });
 
+    const mockBaselineMap: any = {
+      purwokerto_barat: {
+        dbd: { waspada: 11, siaga: 13 },
+        diare: { waspada: 10, siaga: 15 },
+        ispa: { waspada: 25, siaga: 35 },
+      },
+      patikraja: {
+        dbd: { waspada: 12, siaga: 15 },
+        diare: { waspada: 35, siaga: 40 },
+        ispa: { waspada: 70, siaga: 85 },
+      },
+    };
+
     const perPuskesmasEwsMap = new Map();
 
-    const result = computeEwsMetrics(ewsMap, perPuskesmasEwsMap, "all");
+    const result = computeEwsMetrics(
+      ewsMap,
+      perPuskesmasEwsMap,
+      "all",
+      mockBaselineMap,
+    );
 
     expect(result.ewsTren).toHaveLength(2);
     expect(result.ewsTren[1].dbd).toBe(35);
@@ -36,14 +54,23 @@ describe("EWS Calculator Unit Tests (TC-EWS-001)", () => {
     const ewsMap = new Map();
     const perPuskesmasEwsMap = new Map();
 
+    const mockBaselineMap: any = {
+      purwokerto_barat: {
+        dbd: { waspada: 11, siaga: 13 },
+        diare: { waspada: 10, siaga: 15 },
+        ispa: { waspada: 25, siaga: 35 },
+      },
+    };
+
     const pWestData = new Map();
-    pWestData.set("2026-W40", { dbd: 15, diare: 10, ispa: 30 }); // threshold purwokerto_barat: dbd 13 -> SIAGA
+    pWestData.set("2026-W40", { dbd: 15, diare: 10, ispa: 20 }); // threshold purwokerto_barat: dbd 13 -> SIAGA
     perPuskesmasEwsMap.set("purwokerto_barat", pWestData);
 
     const result = computeEwsMetrics(
       ewsMap,
       perPuskesmasEwsMap,
       "purwokerto_barat",
+      mockBaselineMap,
     );
 
     expect(result.puskesmasAlerts.purwokerto_barat).toBeDefined();

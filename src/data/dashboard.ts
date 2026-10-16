@@ -110,13 +110,22 @@ export async function fetchDashboardData(
     activeSubmissions,
     ewsBaselineMap,
   ] = await Promise.all([
-    fetchSimpusData(pId, allDatesToFetch),
+    fetchSimpusData("all", allDatesToFetch),
     fetchActiveSubmissions(pId),
     fetchEwsBaselineData(),
   ]);
 
-  const dailyData = allDailyData.filter((d) => currentDatesSet.has(d.date));
-  const prevPasienSakit = allDailyData
+  const totalKunjunganSemua = allDailyData
+    .filter((d) => currentDatesSet.has(d.date))
+    .reduce((sum, d) => sum + d.kunjungan.total, 0);
+
+  const filteredAllDailyData =
+    pId === "all"
+      ? allDailyData
+      : allDailyData.filter((d) => d.puskesmasId === pId);
+
+  const dailyData = filteredAllDailyData.filter((d) => currentDatesSet.has(d.date));
+  const prevPasienSakit = filteredAllDailyData
     .filter((d) => prevDatesSet.has(d.date))
     .reduce((sum, d) => sum + d.kunjungan.sakit, 0);
 
@@ -143,6 +152,7 @@ export async function fetchDashboardData(
     .slice(0, 10)
     .map(([nama, kasus]) => ({
       nama,
+      kasus,
       persen: Number(((kasus / totalPenyakit) * 100).toFixed(1)),
     }));
   const vektorPenyakit = Object.entries(penyakitCount)
@@ -247,6 +257,7 @@ export async function fetchDashboardData(
     trenPenyakit,
     trenPenyakitHint,
     penyakitTeratas,
+    totalKasusDiagnosis: totalPenyakit,
     tenagaPerProfesi,
     standarTenaga,
     totalTenaga,
@@ -262,6 +273,7 @@ export async function fetchDashboardData(
     ewsTren,
     ewsAlerts,
     kunjunganHarian,
+    totalKunjunganSemua,
     totalKunjunganPuskesmas,
     kunjunganPuskesmasNama: topPuskesmasNama,
     kunjunganPuskesmasId: targetPuskesmasKunjungan,

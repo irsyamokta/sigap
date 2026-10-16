@@ -1,6 +1,7 @@
 import {
   Activity,
   BedDouble,
+  Building2,
   Minus,
   TrendingDown,
   TrendingUp,
@@ -31,22 +32,30 @@ interface DashboardPasienSectionProps {
 export function DashboardPasienSection({ d }: DashboardPasienSectionProps) {
   return (
     <Section title="Data Pasien">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
-          label="Jumlah Pasien Sakit"
-          value={nf.format(d.pasienSakit)}
-          hint={d.pasienSakitHint}
-          icon={Users}
+          label="Total Kunjungan Pasien"
+          value={nf.format(d.totalKunjunganSemua)}
+          hint="Keseluruhan (4 Puskesmas)"
+          icon={UserCheck}
         />
         <StatCard
-          label="Jumlah Kunjungan Pasien"
+          label={
+            d.isDinkesView ? "Kunjungan Tertinggi" : "Kunjungan Puskesmas"
+          }
           value={nf.format(d.totalKunjunganPuskesmas)}
           hint={
             d.isDinkesView
               ? `${d.kunjunganPuskesmasNama} (tertinggi)`
               : `Total di ${d.kunjunganPuskesmasNama}`
           }
-          icon={UserCheck}
+          icon={Building2}
+        />
+        <StatCard
+          label="Total Pasien Sakit"
+          value={nf.format(d.pasienSakit)}
+          hint={d.pasienSakitHint}
+          icon={Users}
         />
         <StatCard
           label="Tren Penyakit"
@@ -62,7 +71,7 @@ export function DashboardPasienSection({ d }: DashboardPasienSectionProps) {
           highlight
         />
         <StatCard
-          label="Penyakit Paling Sering"
+          label="Penyakit Tertinggi"
           value={d.penyakitTeratas[0]?.nama ?? "-"}
           hint={
             d.penyakitTeratas[0]
@@ -85,7 +94,7 @@ export function DashboardEwsSection({ d }: DashboardEwsSectionProps) {
     <Section title="Sistem Peringatan Dini (EWS)">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <p className="text-xs text-muted-foreground">
-          Pemantauan kasus penyakit secara geografis dan tren waktu.
+          Pemantauan kasus penyakit secara geografis dan 10 penyakit teratas.
         </p>
         {d.ewsAlerts.length === 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -94,24 +103,114 @@ export function DashboardEwsSection({ d }: DashboardEwsSectionProps) {
           </span>
         )}
       </div>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
+      <div className="grid gap-5 grid-cols-1 lg:grid-cols-12">
+        <div className="rounded-xl border bg-card p-4 shadow-sm lg:col-span-7 xl:col-span-8 flex flex-col">
           <h3 className="mb-4 text-sm font-semibold text-foreground">
             Peta Sebaran Kasus Waspada
           </h3>
-          <EwsMap data={d} />
+          <div className="flex-1">
+            <EwsMap data={d} />
+          </div>
         </div>
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
-          <h3 className="mb-4 text-sm font-semibold text-foreground">
-            Tren Mingguan Penyakit
-          </h3>
-          <EwsTrendChart data={d.ewsTren} />
+        <div className="rounded-xl border bg-card p-4 shadow-sm lg:col-span-5 xl:col-span-4 flex flex-col justify-between">
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-foreground">
+                10 Penyakit Paling Sering Muncul
+              </h3>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                Top 10
+              </span>
+            </div>
+            {d.penyakitTeratas.length > 0 ? (
+              <ul className="space-y-2.5">
+                {d.penyakitTeratas.map((p, index) => (
+                  <li key={p.nama} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs gap-2">
+                      <span className="flex items-start gap-2 font-medium text-foreground min-w-0">
+                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+                          {index + 1}
+                        </span>
+                        <span className="leading-snug">{p.nama}</span>
+                      </span>
+                      <span className="shrink-0 font-semibold text-primary">
+                        {p.persen}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted">
+                      <div
+                        className="h-1.5 rounded-full [background:var(--gradient-primary)] transition-all duration-300"
+                        style={{
+                          width: `${(p.persen / (d.penyakitTeratas[0]?.persen || 1)) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Tidak ada data penyakit pada periode ini.
+              </p>
+            )}
+          </div>
+
+          {d.penyakitTeratas.length > 0 && (() => {
+            const totalTop10Percent = d.penyakitTeratas
+              .reduce((sum, p) => sum + p.persen, 0)
+              .toFixed(1);
+            const totalTop10Kasus = d.penyakitTeratas.reduce(
+              (sum, p) => sum + (p.kasus ?? 0),
+              0,
+            );
+            const totalSemuaKasus =
+              d.totalKasusDiagnosis ??
+              d.vektorPenyakit?.reduce((sum, p) => sum + p.kasus, 0) ??
+              0;
+            const sisaPercent = Math.max(
+              0,
+              100 - parseFloat(totalTop10Percent),
+            ).toFixed(1);
+
+            return (
+              <div className="mt-4 rounded-lg border border-border/80 bg-muted/40 p-3 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">
+                    Akumulasi 10 Penyakit Teratas
+                  </span>
+                  <span className="font-bold text-primary">
+                    {totalTop10Percent}% Total Kasus
+                  </span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  10 penyakit ini mencakup <strong>{totalTop10Percent}%</strong>
+                  {totalTop10Kasus > 0 && ` (${nf.format(totalTop10Kasus)} kasus)`}
+                  {totalSemuaKasus > 0 &&
+                    ` dari total ${nf.format(totalSemuaKasus)} diagnosis`}
+                  . Sisanya <strong>{sisaPercent}%</strong> tersebar pada diagnosis lainnya.
+                </p>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </Section>
   );
 }
 
+interface DashboardTrenMingguanSectionProps {
+  d: DashboardData;
+}
+
+export function DashboardTrenMingguanSection({
+  d,
+}: DashboardTrenMingguanSectionProps) {
+  return (
+    <Section title="Tren Mingguan Penyakit">
+      <EwsTrendChart data={d.ewsTren} />
+    </Section>
+  );
+}
 
 interface DashboardPenyakitSectionProps {
   d: DashboardData;
@@ -129,59 +228,21 @@ export function DashboardPenyakitSection({
   );
 
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
-      <Section title="Kapasitas Rawat Inap per Puskesmas" className="lg:col-span-2">
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
-            <BedDouble className="size-3" />
-            {rawatInapCount} Puskesmas Rawat Inap
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-            Total Kapasitas: {totalKapasitas} TT
-          </span>
-        </div>
-        <KapasitasBarChart data={d.kapasitasPerPuskesmas} height={260} />
-        <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          Bar berwarna = Rawat Inap aktif · Bar pudar = Non-Rawat Inap
-        </p>
-      </Section>
-
-      <Section title="10 Penyakit Paling Sering Muncul">
-        {d.penyakitTeratas.length > 0 ? (
-          <div className="max-h-[300px] overflow-y-auto pr-1">
-            <ul className="space-y-2.5">
-              {d.penyakitTeratas.map((p, index) => (
-                <li key={p.nama} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-2 font-medium text-foreground">
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
-                        {index + 1}
-                      </span>
-                      {p.nama}
-                    </span>
-                    <span className="font-semibold text-primary">
-                      {p.persen}%
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted">
-                    <div
-                      className="h-1.5 rounded-full [background:var(--gradient-primary)] transition-all duration-300"
-                      style={{
-                        width: `${(p.persen / (d.penyakitTeratas[0]?.persen || 1)) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Tidak ada data penyakit pada periode ini.
-          </p>
-        )}
-      </Section>
-    </div>
+    <Section title="Kapasitas Rawat Inap per Puskesmas">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+          <BedDouble className="size-3" />
+          {rawatInapCount} Puskesmas Rawat Inap
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+          Total Kapasitas: {totalKapasitas} TT
+        </span>
+      </div>
+      <KapasitasBarChart data={d.kapasitasPerPuskesmas} height={260} />
+      <p className="mt-2 text-center text-[11px] text-muted-foreground">
+        Bar berwarna = Rawat Inap aktif · Bar pudar = Non-Rawat Inap
+      </p>
+    </Section>
   );
 }
 

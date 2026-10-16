@@ -186,7 +186,7 @@ export function Navbar({
           : "border-transparent"
       }`}
     >
-      <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-6 sm:py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
         {/* Logo */}
         <p className="text-4xl font-extrabold tracking-tight leading-tight">
           <span className="bg-gradient-to-br from-primary to-primary-glow bg-clip-text text-transparent">

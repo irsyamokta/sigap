@@ -15,6 +15,7 @@ describe("AI Summary Formatter Unit Tests (TC-AI-001)", () => {
       nama: "Puskesmas Purwokerto Barat",
       isDinkesView: false,
       kunjunganPuskesmasNama: "Puskesmas Purwokerto Barat",
+      totalKunjunganSemua: 1200,
       totalKunjunganPuskesmas: 1200,
       pasienSakit: 300,
       pasienSembuh: 900,

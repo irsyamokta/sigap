@@ -322,7 +322,7 @@ export function EwsMap({ data }: EwsMapProps) {
 
   if (loading) {
     return (
-      <div className="flex h-[350px] w-full items-center justify-center rounded-xl border bg-muted/20">
+      <div className="flex h-[380px] w-full items-center justify-center rounded-xl border bg-muted/20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -330,7 +330,7 @@ export function EwsMap({ data }: EwsMapProps) {
 
   if (!currentGeoData) {
     return (
-      <div className="flex h-[350px] w-full items-center justify-center rounded-xl border bg-muted/20">
+      <div className="flex h-[380px] w-full items-center justify-center rounded-xl border bg-muted/20">
         <p className="text-sm text-muted-foreground">Gagal memuat data peta KML</p>
       </div>
     );
@@ -364,9 +364,9 @@ export function EwsMap({ data }: EwsMapProps) {
 
       <MapContainer
         center={[-7.445, 109.25]}
-        zoom={11}
-        scrollWheelZoom={false}
-        className="h-[350px] w-full z-0"
+        zoom={12}
+        scrollWheelZoom={true}
+        className="h-[380px] w-full z-0"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
