@@ -228,21 +228,23 @@ export function DashboardPenyakitSection({
   );
 
   return (
-    <Section title="Kapasitas Rawat Inap per Puskesmas">
-      <div className="mb-3 flex flex-wrap items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
-          <BedDouble className="size-3" />
-          {rawatInapCount} Puskesmas Rawat Inap
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-          Total Kapasitas: {totalKapasitas} TT
-        </span>
-      </div>
-      <KapasitasBarChart data={d.kapasitasPerPuskesmas} height={260} />
-      <p className="mt-2 text-center text-[11px] text-muted-foreground">
-        Bar berwarna = Rawat Inap aktif · Bar pudar = Non-Rawat Inap
-      </p>
-    </Section>
+    <div className="hidden">
+      <Section title="Kapasitas Rawat Inap per Puskesmas">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+            <BedDouble className="size-3" />
+            {rawatInapCount} Puskesmas Rawat Inap
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+            Total Kapasitas: {totalKapasitas} TT
+          </span>
+        </div>
+        <KapasitasBarChart data={d.kapasitasPerPuskesmas} height={260} />
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">
+          Bar berwarna = Rawat Inap aktif · Bar pudar = Non-Rawat Inap
+        </p>
+      </Section>
+    </div>
   );
 }
 

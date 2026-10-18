@@ -101,15 +101,17 @@ export function DashboardSkeleton() {
       </section>
 
       {/* Section 5: Kapasitas Rawat Inap per Puskesmas */}
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
-        <Skeleton className="mb-3 h-4 w-56" />
-        <div className="mb-3 flex items-center gap-3">
-          <Skeleton className="h-5 w-40 rounded-full" />
-          <Skeleton className="h-5 w-32 rounded-full" />
-        </div>
-        <Skeleton className="h-[260px] w-full rounded-xl" />
-        <Skeleton className="mx-auto mt-2 h-3 w-64" />
-      </section>
+      <div className="hidden">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
+          <Skeleton className="mb-3 h-4 w-56" />
+          <div className="mb-3 flex items-center gap-3">
+            <Skeleton className="h-5 w-40 rounded-full" />
+            <Skeleton className="h-5 w-32 rounded-full" />
+          </div>
+          <Skeleton className="h-[260px] w-full rounded-xl" />
+          <Skeleton className="mx-auto mt-2 h-3 w-64" />
+        </section>
+      </div>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]">
         <Skeleton className="mb-4 h-4 w-60" />

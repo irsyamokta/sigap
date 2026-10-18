@@ -110,6 +110,7 @@ export function computeEwsMetrics(
 
   const ewsTren = Array.from(ewsMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-10)
     .map(([isoKey, d]) => ({
       minggu: d.label,
       _isoKey: isoKey,

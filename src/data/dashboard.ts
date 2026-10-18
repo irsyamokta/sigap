@@ -1,4 +1,4 @@
-import { format, eachDayOfInterval } from "date-fns";
+import { format, eachDayOfInterval, subDays } from "date-fns";
 import {
   getNakesSubmissionsFn,
   buildNakesRatiosFromSubmissions,
@@ -97,9 +97,16 @@ export async function fetchDashboardData(
     currentPeriodDays,
   );
 
-  const allDatesToFetch = [...new Set([...datesToFetch, ...prevDaysToFetch])];
+  // EWS: ambil 10 minggu (70 hari) ke belakang dari endDate, independen dari filter
+  const ewsWindowEnd = endDate;
+  const ewsWindowStart = subDays(ewsWindowEnd, 69);
+  const ewsIntervalDays = eachDayOfInterval({ start: ewsWindowStart, end: ewsWindowEnd });
+  const ewsDatesToFetch = ewsIntervalDays.map((d) => format(d, "yyyy-MM-dd"));
+
+  const allDatesToFetch = [...new Set([...datesToFetch, ...prevDaysToFetch, ...ewsDatesToFetch])];
   const currentDatesSet = new Set(datesToFetch);
   const prevDatesSet = new Set(prevDaysToFetch);
+  const ewsDatesSet = new Set(ewsDatesToFetch);
 
   const [
     {
@@ -129,6 +136,12 @@ export async function fetchDashboardData(
     .filter((d) => prevDatesSet.has(d.date))
     .reduce((sum, d) => sum + d.kunjungan.sakit, 0);
 
+  // Data khusus EWS (70 hari terakhir) untuk chart tren mingguan
+  const ewsDailyData =
+    pId === "all"
+      ? allDailyData.filter((d) => ewsDatesSet.has(d.date))
+      : allDailyData.filter((d) => d.puskesmasId === pId && ewsDatesSet.has(d.date));
+
   const nakesRatios = await buildNakesRatiosFromSubmissions(
     activeSubmissions,
     pId,
@@ -139,11 +152,17 @@ export async function fetchDashboardData(
     pasienSembuh,
     penyakitCount,
     trenMap,
-    ewsMap,
+    ewsMap: _ewsMapUnused,
     dailyMap,
     perPuskesmasDailyMap,
-    perPuskesmasEwsMap,
+    perPuskesmasEwsMap: _perPuskesmasEwsMapUnused,
   } = aggregateDailyData(dailyData, startDate, endDate);
+
+  // Bangun ewsMap dari 70 hari terakhir
+  const {
+    ewsMap,
+    perPuskesmasEwsMap,
+  } = aggregateDailyData(ewsDailyData, ewsWindowStart, ewsWindowEnd);
 
   const totalPenyakit =
     Object.values(penyakitCount).reduce((a, b) => a + b, 0) || 1;
