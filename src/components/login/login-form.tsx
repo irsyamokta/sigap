@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect, useCallback, FormEvent } from "react";
 import {
   Lock,
   Mail,
@@ -6,9 +6,11 @@ import {
   Building2,
   Stethoscope,
   ArrowRight,
+  RotateCw,
 } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";
-import { loginFn } from "@/lib/auth";
+import { loginFn, issueCaptchaFn } from "@/lib/auth";
+import { generateCaptchaImage } from "@/lib/captcha";
 
 export function LoginForm() {
   const router = useRouter();
@@ -16,6 +18,33 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaImage, setCaptchaImage] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaLoading, setCaptchaLoading] = useState(false);
+
+  const refreshCaptcha = useCallback(async () => {
+    setCaptchaLoading(true);
+    try {
+      const { token, code } = await issueCaptchaFn();
+      setCaptchaToken(token);
+      setCaptchaImage(generateCaptchaImage(code));
+    } catch {
+      setErrorMessage("Gagal memuat CAPTCHA. Silakan muat ulang halaman.");
+    } finally {
+      setCaptchaLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshCaptcha();
+  }, [refreshCaptcha]);
+
+  const setPresetCredentials = (presetEmail: string) => {
+    setEmail(presetEmail);
+    setPassword("rahasia123");
+    setErrorMessage(null);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,7 +58,9 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      await loginFn({ data: { email, password } });
+      await loginFn({
+        data: { email, password, captchaToken, captchaAnswer: captchaInput.trim() },
+      });
       await router.invalidate();
       window.location.href = "/";
     } catch (err: unknown) {
@@ -38,15 +69,11 @@ export function LoginForm() {
           ? err.message
           : "Gagal login. Silakan periksa kembali kredensial Anda.";
       setErrorMessage(msg);
+      setCaptchaInput("");
+      void refreshCaptcha();
     } finally {
       setLoading(false);
     }
-  };
-
-  const setPresetCredentials = (presetEmail: string) => {
-    setEmail(presetEmail);
-    setPassword("rahasia123");
-    setErrorMessage(null);
   };
 
   return (

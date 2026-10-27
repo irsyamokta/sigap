@@ -7,6 +7,25 @@ const { default: handler } = await import("./dist/server/server.js");
 
 const app = new Hono();
 
+app.use("*", async (c, next) => {
+  await next();
+
+  c.header(
+    "Content-Security-Policy",
+    "frame-ancestors 'self' https://*.banyumaskab.go.id",
+  );
+
+  if (process.env.NODE_ENV === "production") {
+    c.header(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+  }
+
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+});
+
 // Serve static assets from dist/client
 app.use("/assets/*", serveStatic({ root: "./dist/client" }));
 

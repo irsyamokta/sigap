@@ -117,7 +117,7 @@ export async function fetchDashboardData(
     activeSubmissions,
     ewsBaselineMap,
   ] = await Promise.all([
-    fetchSimpusData("all", allDatesToFetch),
+    fetchSimpusData(pId, allDatesToFetch),
     fetchActiveSubmissions(pId),
     fetchEwsBaselineData(),
   ]);

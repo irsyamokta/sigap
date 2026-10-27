@@ -4,10 +4,10 @@ import {
   useRouter,
   redirect,
 } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { RotateCw } from "lucide-react";
-import { loginFn, getAuthUserFn } from "@/lib/auth";
-import { generateCaptchaCode, generateCaptchaImage } from "@/lib/captcha";
+import { loginFn, getAuthUserFn, issueCaptchaFn } from "@/lib/auth";
+import { generateCaptchaImage } from "@/lib/captcha";
 import logoBanyumas from "@/assets/logo-banyumas.png";
 import illustrationSvg from "@/assets/illustration.svg";
 
@@ -38,37 +38,44 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [captchaCode, setCaptchaCode] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const [captchaImage, setCaptchaImage] = useState("");
   const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaLoading, setCaptchaLoading] = useState(false);
   const router = useRouter();
   const navigate = useNavigate();
 
-  const refreshCaptcha = () => {
-    const code = generateCaptchaCode();
-    setCaptchaCode(code);
-    setCaptchaImage(generateCaptchaImage(code));
-  };
+  const refreshCaptcha = useCallback(async () => {
+    setCaptchaLoading(true);
+    try {
+      const { token, code } = await issueCaptchaFn();
+      setCaptchaToken(token);
+      setCaptchaImage(generateCaptchaImage(code));
+    } catch {
+      setError("Gagal memuat CAPTCHA. Silakan muat ulang halaman.");
+    } finally {
+      setCaptchaLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    refreshCaptcha();
-  }, []);
+    void refreshCaptcha();
+  }, [refreshCaptcha]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (captchaInput.trim() !== captchaCode) {
-      setError("Kode CAPTCHA tidak sesuai. Silakan coba lagi.");
-      refreshCaptcha();
-      setCaptchaInput("");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      await loginFn({ data: { email, password } });
+      await loginFn({
+        data: {
+          email,
+          password,
+          captchaToken,
+          captchaAnswer: captchaInput.trim(),
+        },
+      });
       await router.invalidate();
       navigate({ to: "/" });
     } catch (err: unknown) {
@@ -76,10 +83,13 @@ function LoginPage() {
         err instanceof Error
           ? err.message
           : "Gagal login. Silakan periksa kembali kredensial Anda.";
+
       const isKnownUserError =
         msg.includes("Email atau password salah") ||
         msg.includes("Format email tidak valid") ||
-        msg.includes("Password tidak boleh kosong");
+        msg.includes("Password tidak boleh kosong") ||
+        msg.includes("CAPTCHA") ||
+        msg.includes("Terlalu banyak percobaan");
 
       if (isKnownUserError) {
         setError(msg);
@@ -91,6 +101,9 @@ function LoginPage() {
             : "Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.",
         );
       }
+
+      setCaptchaInput("");
+      void refreshCaptcha();
     } finally {
       setLoading(false);
     }
@@ -342,8 +355,9 @@ function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={refreshCaptcha}
-                  className="p-3 rounded-xl border border-gray-300 hover:bg-slate-50 text-gray-500 hover:text-cyan-600 hover:border-cyan-600 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-600/20 shadow-sm flex items-center justify-center h-12 w-12"
+                  onClick={() => void refreshCaptcha()}
+                  disabled={captchaLoading}
+                  className="p-3 rounded-xl border border-gray-300 hover:bg-slate-50 text-gray-500 hover:text-cyan-600 hover:border-cyan-600 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-600/20 shadow-sm flex items-center justify-center h-12 w-12 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Ganti Kode CAPTCHA"
                 >
                   <RotateCw className="h-5 w-5" />

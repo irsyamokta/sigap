@@ -13,6 +13,7 @@ import { getSimpusToken } from "./auth";
 import { fetchPuskesmasStaticInfo } from "./services/static-info.service";
 import { fetchDailyPuskesmasData } from "./services/daily-data.service";
 import { getEwsBaseline } from "./services/ews-baseline.service";
+import { getAuthUserFn } from "@/lib/auth";
 
 export type {
   SupportedPuskesmasId,
@@ -31,6 +32,16 @@ export type { EwsBaseline, DiseaseThreshold } from "./services/ews-baseline.serv
 export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
   .validator(z.object({ puskesmasId: z.string(), dates: z.array(z.string()) }))
   .handler(async ({ data }): Promise<SimpusDashboardDataResponse> => {
+    const sessionUser = await getAuthUserFn();
+    if (sessionUser?.role === "PUSKESMAS") {
+      const allowed = sessionUser.puskesmasCode;
+      if (!allowed || data.puskesmasId !== allowed) {
+        throw new Error(
+          "Forbidden: Anda hanya dapat mengakses data puskesmas Anda sendiri.",
+        );
+      }
+    }
+
     const baseUrl =
       process.env.BASE_URL || "https://simpus.banyumaskab.go.id/api_telkom/v1";
     const token = await getSimpusToken();
