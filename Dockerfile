@@ -10,9 +10,8 @@ RUN apt-get update && apt-get install -y \
     openssl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package.json ./
+COPY package.json package-lock.json* ./
 
-# package-lock.json dikecualikan via .dockerignore karena berisi binary path Windows.
 RUN npm install --legacy-peer-deps
 
 COPY . .
