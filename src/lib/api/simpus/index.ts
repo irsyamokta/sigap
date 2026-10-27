@@ -13,7 +13,8 @@ import { getSimpusToken } from "./auth";
 import { fetchPuskesmasStaticInfo } from "./services/static-info.service";
 import { fetchDailyPuskesmasData } from "./services/daily-data.service";
 import { getEwsBaseline } from "./services/ews-baseline.service";
-import { getAuthUserFn } from "@/lib/auth";
+import { getCookie } from "@tanstack/react-start/server";
+import { prisma } from "@/lib/prisma";
 
 export type {
   SupportedPuskesmasId,
@@ -32,13 +33,21 @@ export type { EwsBaseline, DiseaseThreshold } from "./services/ews-baseline.serv
 export const fetchSimpusDashboardDataFn = createServerFn({ method: "POST" })
   .validator(z.object({ puskesmasId: z.string(), dates: z.array(z.string()) }))
   .handler(async ({ data }): Promise<SimpusDashboardDataResponse> => {
-    const sessionUser = await getAuthUserFn();
-    if (sessionUser?.role === "PUSKESMAS") {
-      const allowed = sessionUser.puskesmasCode;
-      if (!allowed || data.puskesmasId !== allowed) {
-        throw new Error(
-          "Forbidden: Anda hanya dapat mengakses data puskesmas Anda sendiri.",
-        );
+    const sessionId = getCookie("sigap_session");
+    if (sessionId) {
+      const session = await prisma.session.findUnique({
+        where: { id: sessionId },
+        include: { user: { select: { role: true, puskesmasCode: true } } },
+      });
+      if (session && session.expiresAt.getTime() > Date.now()) {
+        if (session.user.role === "PUSKESMAS") {
+          const allowed = session.user.puskesmasCode;
+          if (!allowed || data.puskesmasId !== allowed) {
+            throw new Error(
+              "Forbidden: Anda hanya dapat mengakses data puskesmas Anda sendiri.",
+            );
+          }
+        }
       }
     }
 

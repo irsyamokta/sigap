@@ -3,8 +3,9 @@ import {
   setCookie,
   getCookie,
   deleteCookie,
+  getRequestIP,
+  getRequestHeader,
 } from "@tanstack/react-start/server";
-import { getWebRequest } from "vinxi/http";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
@@ -24,12 +25,17 @@ const RATE_LIMIT_LOCKOUT_MS = 5 * 60 * 1000;
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
-function getClientIp(request: Request): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    request.headers.get("x-real-ip") ??
-    "unknown"
-  );
+function getClientIp(): string {
+  try {
+    return (
+      getRequestHeader("x-forwarded-for")?.split(",")[0].trim() ??
+      getRequestHeader("x-real-ip") ??
+      getRequestIP() ??
+      "unknown"
+    );
+  } catch {
+    return "unknown";
+  }
 }
 
 function checkRateLimit(ip: string): void {
@@ -126,14 +132,7 @@ export const loginFn = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    let ip = "unknown";
-    try {
-      const req = getWebRequest();
-      ip = getClientIp(req);
-    } catch {
-      // ignore outside request context
-    }
-
+    const ip = getClientIp();
     checkRateLimit(ip);
 
     const captchaEntry = captchaStore.get(data.captchaToken);
@@ -231,7 +230,6 @@ export const getAuthUserFn = createServerFn({ method: "GET" }).handler(
       return null;
     }
 
-    // Remove session if expired
     if (session.expiresAt.getTime() < Date.now()) {
       await prisma.session.delete({ where: { id: session.id } });
       return null;

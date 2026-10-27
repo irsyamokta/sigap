@@ -1,8 +1,28 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { getAuthUserFn } from "@/lib/auth";
+import { getCookie } from "@tanstack/react-start/server";
+import bcrypt from "bcryptjs";
+
+async function getSessionUser() {
+  const sessionId = getCookie("sigap_session");
+  if (!sessionId) return null;
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          puskesmasCode: true,
+        },
+      },
+    },
+  });
+  if (!session || session.expiresAt.getTime() < Date.now()) return null;
+  return session.user;
+}
 import type { PuskesmasWorkforceData, WorkforceItem } from "@/types/workforce";
 import {
   getMergedWorkforceData,
@@ -72,7 +92,7 @@ export const submitNakesRequirementFn = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    let user = await getAuthUserFn();
+    let user = await getSessionUser();
 
     if (!user) {
       user =
@@ -188,7 +208,7 @@ export const getNakesSubmissionsFn = createServerFn({ method: "GET" })
     }),
   )
   .handler(async ({ data }): Promise<PuskesmasWorkforceData[]> => {
-    const user = await getAuthUserFn();
+    const user = await getSessionUser();
     const userRole = user?.role ?? "DINKES";
     const userPuskesmasCode = user?.puskesmasCode ?? null;
 
